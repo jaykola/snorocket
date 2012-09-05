@@ -16,10 +16,8 @@
  -->
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>au.csiro</groupId>
   <artifactId>snorocket-tests</artifactId>
   <packaging>jar</packaging>
-  <version>1.1.22-SNAPSHOT</version>
   <name>snorocket-tests</name>
   <url>http://maven.apache.org</url>
   
@@ -34,6 +32,26 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>snorocket</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-api</artifactId>
+      <version>3.3</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-apibinding</artifactId>
+      <version>3.3</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-reasoner</artifactId>
+      <version>3.3</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-mansyntax</artifactId>
+      <version>3.3</version>
     </dependency>
   </dependencies>
 
