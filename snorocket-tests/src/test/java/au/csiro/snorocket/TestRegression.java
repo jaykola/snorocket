@@ -57,7 +57,6 @@ import au.csiro.snorocket.core.Factory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
 import au.csiro.snorocket.core.SnorocketOWLReasoner;
-import au.csiro.snorocket.core.NormalisedOntology.Classification;
 import au.csiro.snorocket.core.PostProcessedData;
 import au.csiro.snorocket.core.axioms.Inclusion;
 import au.csiro.snorocket.core.importer.RF1Importer;
@@ -709,10 +708,10 @@ public class TestRegression {
         System.out.println("Loading axioms");
         no.loadAxioms(new HashSet<>(axioms));
         System.out.println("Running classification");
-        Classification c = no.getClassification();
+        no.classify();
         System.out.println("Computing taxonomy");
         PostProcessedData ppd = new PostProcessedData();
-        ppd.computeDag(factory, c.getSubsumptions(), null);
+        ppd.computeDag(factory, no.getSubsumptions(), null);
         System.out.println("Done");
         
         // Load ontology from canonical table
