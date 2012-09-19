@@ -39,13 +39,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.PrefixManager;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.NullReasonerProgressMonitor;
+import org.semanticweb.owlapi.util.DefaultPrefixManager;
+import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
 import au.csiro.snorocket.core.ClassNode;
 import au.csiro.snorocket.core.Factory;
@@ -114,6 +119,572 @@ public class TestRegression {
 		IRI iriStated = IRI.create(stated.getAbsoluteFile());
 		IRI iriInferred = IRI.create(inferred.getAbsoluteFile());
         testOntology(iriStated, iriInferred, false);
+	}
+	
+	/**
+	 * Tests the sub-second incremental classification functionality by doing 
+	 * the following:
+	 * 
+	 * <ol>
+	 *   <li>The concept "Concretion of appendix" is removed from SNOMED.</li>
+	 *   <li>This ontology is classified.</li>
+	 *   <li>The axioms that were removed are added programmatically to the
+	 *   ontology (see axioms below).</li>
+	 *   <li>The new ontology is reclassified and the time taken to do so is
+	 *   measured.</li>
+	 *   <li>If time is below 1 second the test is successful.</li>
+	 * </ol>
+	 * 
+	 * Declaration(Class(:SCT_24764000))
+	 * AnnotationAssertion(rdfs:label :SCT_24764000 
+	 *   "Concretion of appendix (disorder)"
+	 * )
+	 * EquivalentClasses(:SCT_24764000 
+	 *   ObjectIntersectionOf(:SCT_18526009 
+     *     ObjectSomeValuesFrom(:RoleGroup 
+     *       ObjectIntersectionOf(
+     *         ObjectSomeValuesFrom(:SCT_116676008 :SCT_56381008)
+     *         ObjectSomeValuesFrom(:SCT_363698007 :SCT_66754008)
+     *       )
+     *     )
+     *   )
+     * )
+	 */
+	@Test
+	public void testSnomed_20120131_Incremental() {
+		File stated = new File(TEST_DIR+"snomed_20120131_inc_stated.owl");
+		File inferred = new File(TEST_DIR+"snomed_20120131_inferred.owl");
+		IRI iriStated = IRI.create(stated.getAbsoluteFile());
+		IRI iriInferred = IRI.create(inferred.getAbsoluteFile());
+		
+		try {
+			System.out.println("Loading stated ontology from "+iriStated);
+        	OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        	OWLOntology ont = manager.loadOntology(iriStated);
+    			
+        	// Classify ontology from stated form
+            SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
+            
+            System.out.println("Classifying");
+            c.synchronise();
+            
+            // Add additional axioms
+            PrefixManager pm = new DefaultPrefixManager(
+            		"http://www.ihtsdo.org/");
+            OWLDataFactory df = ont.getOWLOntologyManager().getOWLDataFactory();
+            OWLClass concr = df.getOWLClass(":SCT_24764000", pm);
+            OWLAxiom a1 = df.getOWLAnnotationAssertionAxiom(concr.getIRI(), 
+            	df.getOWLAnnotation(
+            		df.getOWLAnnotationProperty(
+            				OWLRDFVocabulary.RDFS_LABEL.getIRI()),
+            		df.getOWLLiteral("Concretion of appendix (disorder)")
+            	)
+            );
+            OWLAxiom a2 = df.getOWLDeclarationAxiom(concr);
+            OWLAxiom a3 = df.getOWLEquivalentClassesAxiom(concr, 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass(":SCT_18526009", pm),
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm), 
+            			df.getOWLObjectIntersectionOf(
+            				df.getOWLObjectSomeValuesFrom(
+            					df.getOWLObjectProperty(":SCT_116676008", pm), 
+            					df.getOWLClass(":SCT_56381008", pm)
+            				),
+            				df.getOWLObjectSomeValuesFrom(
+            					df.getOWLObjectProperty(":SCT_363698007", pm), 
+            					df.getOWLClass(":SCT_66754008", pm)
+            				)
+            			)
+            		)
+            	)
+            );
+            manager.addAxiom(ont, a1);
+            manager.addAxiom(ont, a2);
+            manager.addAxiom(ont, a3);
+            
+            // Classify again
+            long start = System.currentTimeMillis();
+            c.flush();
+            
+            // Measure time
+            long time = System.currentTimeMillis() - start;
+            System.out.println("The time:"+time);
+            Assert.assertTrue("Incremental classification took longer than 1 " +
+            		"second: "+time, time < 1000);
+            
+            // Load ontology from inferred form to test for correctness
+            System.out.println("Loading inferred ontology from "+iriInferred);
+            OWLOntologyManager manager2 = OWLManager.createOWLOntologyManager();
+            OWLOntology ont2 = manager2.loadOntology(iriInferred);          
+            
+            System.out.println("Testing parent equality");
+            int numOk = 0;
+            int numWrong = 0;
+            for(OWLClass cl : ont2.getClassesInSignature()) {            	
+            	Set<OWLClass> truth = new HashSet<OWLClass>();
+            	
+            	Set<OWLClassExpression> parents = cl.getSuperClasses(ont2);
+            	for(OWLClassExpression ocl : parents) {
+            		if(!ocl.isAnonymous()) {
+            			truth.add(ocl.asOWLClass());
+            		}
+            	}
+            	
+            	Set<OWLClass> classified = new HashSet<OWLClass>();
+            	NodeSet<OWLClass> otherParents = c.getSuperClasses(cl, true);
+            	classified.addAll(otherParents.getFlattened());
+            	
+            	// Assert parents are equal
+            	if(truth.size() != classified.size()) {
+            		numWrong++;
+            		System.out.println(cl.toStringID()+"("+
+            				DebugUtils.getLabel(cl, ont)+")");
+            		System.out.println("Truth: "+formatClassSet(truth, ont));
+                	System.out.println("Classified: "+
+                			formatClassSet(classified, ont));
+            	} else {
+	            	truth.removeAll(classified);
+	            	
+	            	if(truth.isEmpty()) {
+	            		numOk++;
+	            	} else {
+	            		numWrong++;
+	            		System.out.println(cl.toStringID()+"("+
+	            				DebugUtils.getLabel(cl, ont)+")");
+	            		System.out.println(
+	            				"Truth: "+formatClassSet(truth, ont));
+	                	System.out.println("Classified: "+
+	                			formatClassSet(classified, ont));
+	            	}
+            	}
+            }
+            assertTrue("Num OK: "+numOk+" Num wrong: "+numWrong, numWrong == 0);
+        } catch (OWLOntologyCreationException e) {
+            e.printStackTrace();
+            assertTrue("Error loading ontologies", false);
+        }
+	}
+	
+	/**
+	 * Similar to testIncremental() but removes two concepts from the original
+	 * ontology. The removed axioms are:
+	 * 
+	 * Declaration(Class(:SCT_24764000))
+	 * AnnotationAssertion(rdfs:label :SCT_24764000 
+	 *   "Concretion of appendix (disorder)"
+	 * )
+	 * EquivalentClasses(:SCT_24764000 
+	 *   ObjectIntersectionOf(:SCT_18526009 
+     *     ObjectSomeValuesFrom(:RoleGroup 
+     *       ObjectIntersectionOf(
+     *         ObjectSomeValuesFrom(:SCT_116676008 :SCT_56381008)
+     *         ObjectSomeValuesFrom(:SCT_363698007 :SCT_66754008)
+     *       )
+     *     )
+     *   )
+     * )
+	 * 
+	 * Declaration(Class(:SCT_300307005))
+     * AnnotationAssertion(rdfs:label :SCT_300307005 
+     *   "Finding of appendix (finding)"
+     * )
+     * EquivalentClasses(:SCT_300307005 
+     *   ObjectIntersectionOf(:SCT_118436003 
+     *     ObjectSomeValuesFrom(:RoleGroup 
+     *       ObjectSomeValuesFrom(:SCT_363698007 :SCT_66754008)
+     *     )
+     *   )
+     * )
+     * SubClassOf(:SCT_300308000 
+     *   ObjectIntersectionOf(:SCT_300307005 
+     *     ObjectSomeValuesFrom(:RoleGroup 
+     *       ObjectSomeValuesFrom(:SCT_363698007 :SCT_66754008)
+     *     )
+     *   )
+     * )
+     * SubClassOf(:SCT_300309008 
+     *   ObjectIntersectionOf(:SCT_300307005 
+     *     ObjectSomeValuesFrom(:RoleGroup 
+     *       ObjectSomeValuesFrom(:SCT_363698007 :SCT_66754008)
+     *     )
+     *   )
+     * )
+     * SubClassOf(:SCT_422989001 
+     *   ObjectIntersectionOf(:SCT_300307005 :SCT_395557000)
+     * )
+	 */
+	@Test
+	public void testSnomed_20120131_Incremental2() {
+		File stated = new File(TEST_DIR+"snomed_20120131_inc2_stated.owl");
+		File inferred = new File(TEST_DIR+"snomed_20120131_inferred.owl");
+		IRI iriStated = IRI.create(stated.getAbsoluteFile());
+		IRI iriInferred = IRI.create(inferred.getAbsoluteFile());
+		
+		try {
+			System.out.println("Loading stated ontology from "+iriStated);
+        	OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        	OWLOntology ont = manager.loadOntology(iriStated);
+    			
+        	// Classify ontology from stated form
+            SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
+            
+            System.out.println("Classifying");
+            c.synchronise();
+            
+            // Add additional axioms
+            PrefixManager pm = new DefaultPrefixManager(
+            		"http://www.ihtsdo.org/");
+            OWLDataFactory df = ont.getOWLOntologyManager().getOWLDataFactory();
+            OWLClass concr = df.getOWLClass(":SCT_24764000", pm);
+            OWLAxiom a1 = df.getOWLAnnotationAssertionAxiom(concr.getIRI(), 
+            	df.getOWLAnnotation(
+            		df.getOWLAnnotationProperty(
+            				OWLRDFVocabulary.RDFS_LABEL.getIRI()),
+            		df.getOWLLiteral("Concretion of appendix (disorder)")
+            	)
+            );
+            OWLAxiom a2 = df.getOWLDeclarationAxiom(concr);
+            OWLAxiom a3 = df.getOWLEquivalentClassesAxiom(concr, 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass(":SCT_18526009", pm),
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm), 
+            			df.getOWLObjectIntersectionOf(
+            				df.getOWLObjectSomeValuesFrom(
+            					df.getOWLObjectProperty(":SCT_116676008", pm), 
+            					df.getOWLClass(":SCT_56381008", pm)
+            				),
+            				df.getOWLObjectSomeValuesFrom(
+            					df.getOWLObjectProperty(":SCT_363698007", pm), 
+            					df.getOWLClass(":SCT_66754008", pm)
+            				)
+            			)
+            		)
+            	)
+            );
+            
+            OWLClass concr2 = df.getOWLClass(":SCT_300307005", pm);
+            OWLAxiom a4 = df.getOWLAnnotationAssertionAxiom(concr2.getIRI(), 
+            	df.getOWLAnnotation(
+                		df.getOWLAnnotationProperty(
+                				OWLRDFVocabulary.RDFS_LABEL.getIRI()),
+                		df.getOWLLiteral("Finding of appendix (finding)")
+                	)
+                );
+            
+            OWLAxiom a5 = df.getOWLDeclarationAxiom(concr2);
+            
+            OWLAxiom a6 = df.getOWLEquivalentClassesAxiom(
+            	df.getOWLClass(":SCT_300307005", pm), 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass(":SCT_118436003", pm),
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm),
+            			df.getOWLObjectSomeValuesFrom(
+            				df.getOWLObjectProperty(":SCT_363698007", pm), 
+            				df.getOWLClass(":SCT_66754008", pm)
+            			)
+            		)
+            	)
+            );
+            
+            OWLAxiom a7 = df.getOWLSubClassOfAxiom(
+            	df.getOWLClass(":SCT_300308000", pm), 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass("SCT_300307005", pm), 
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm), 
+            			df.getOWLObjectSomeValuesFrom(
+            				df.getOWLObjectProperty(":SCT_363698007", pm), 
+            				df.getOWLClass(":SCT_66754008", pm)
+            			)
+            		)
+            	)
+            );
+            
+            OWLAxiom a8 = df.getOWLSubClassOfAxiom(
+            	df.getOWLClass(":SCT_300309008", pm), 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass("SCT_300307005", pm), 
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm), 
+            			df.getOWLObjectSomeValuesFrom(
+            				df.getOWLObjectProperty(":SCT_363698007", pm), 
+            				df.getOWLClass(":SCT_66754008", pm)
+            			)
+            		)
+            	)
+            );
+            
+            OWLAxiom a9 = df.getOWLSubClassOfAxiom(
+            	df.getOWLClass(":SCT_422989001", pm), 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass("SCT_300307005", pm),
+            		df.getOWLClass(":SCT_395557000", pm)
+            	)
+            );
+            
+            manager.addAxiom(ont, a1);
+            manager.addAxiom(ont, a2);
+            manager.addAxiom(ont, a3);
+            manager.addAxiom(ont, a4);
+            manager.addAxiom(ont, a5);
+            manager.addAxiom(ont, a6);
+            manager.addAxiom(ont, a7);
+            manager.addAxiom(ont, a8);
+            manager.addAxiom(ont, a9);
+            
+            // Classify again
+            long start = System.currentTimeMillis();
+            c.flush();
+            
+            // Measure time
+            long time = System.currentTimeMillis() - start;
+            System.out.println("The time:"+time);
+            Assert.assertTrue("Incremental classification took longer than 1 " +
+            		"second: "+time, time < 1000);
+            
+            // Load ontology from inferred form to test for correctness
+            System.out.println("Loading inferred ontology from "+iriInferred);
+            OWLOntologyManager manager2 = OWLManager.createOWLOntologyManager();
+            OWLOntology ont2 = manager2.loadOntology(iriInferred);          
+            
+            System.out.println("Testing parent equality");
+            int numOk = 0;
+            int numWrong = 0;
+            for(OWLClass cl : ont2.getClassesInSignature()) {            	
+            	Set<OWLClass> truth = new HashSet<OWLClass>();
+            	
+            	Set<OWLClassExpression> parents = cl.getSuperClasses(ont2);
+            	for(OWLClassExpression ocl : parents) {
+            		if(!ocl.isAnonymous()) {
+            			truth.add(ocl.asOWLClass());
+            		}
+            	}
+            	
+            	Set<OWLClass> classified = new HashSet<OWLClass>();
+            	NodeSet<OWLClass> otherParents = c.getSuperClasses(cl, true);
+            	classified.addAll(otherParents.getFlattened());
+            	
+            	// Assert parents are equal
+            	if(truth.size() != classified.size()) {
+            		numWrong++;
+            		System.out.println(cl.toStringID()+"("+
+            				DebugUtils.getLabel(cl, ont)+")");
+            		System.out.println("Truth: "+formatClassSet(truth, ont));
+                	System.out.println("Classified: "+
+                			formatClassSet(classified, ont));
+            	} else {
+	            	truth.removeAll(classified);
+	            	
+	            	if(truth.isEmpty()) {
+	            		numOk++;
+	            	} else {
+	            		numWrong++;
+	            		System.out.println(cl.toStringID()+"("+
+	            				DebugUtils.getLabel(cl, ont)+")");
+	            		System.out.println(
+	            				"Truth: "+formatClassSet(truth, ont));
+	                	System.out.println("Classified: "+
+	                			formatClassSet(classified, ont));
+	            	}
+            	}
+            }
+            assertTrue("Num OK: "+numOk+" Num wrong: "+numWrong, numWrong == 0);
+        } catch (OWLOntologyCreationException e) {
+            e.printStackTrace();
+            assertTrue("Error loading ontologies", false);
+        }
+	}
+	
+	/**
+	 * Similar to testIncremental2() but only one concept (:SCT_24764000) is 
+	 * removed from the original ontology. This means that redundant axioms are
+	 * added programmatically.
+	 */
+	@Test
+	public void testSnomed_20120131_Incremental3() {
+		File stated = new File(TEST_DIR+"snomed_20120131_inc_stated.owl");
+		File inferred = new File(TEST_DIR+"snomed_20120131_inferred.owl");
+		IRI iriStated = IRI.create(stated.getAbsoluteFile());
+		IRI iriInferred = IRI.create(inferred.getAbsoluteFile());
+		
+		try {
+			System.out.println("Loading stated ontology from "+iriStated);
+        	OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        	OWLOntology ont = manager.loadOntology(iriStated);
+    			
+        	// Classify ontology from stated form
+            SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
+            
+            System.out.println("Classifying");
+            c.synchronise();
+            
+            // Add additional axioms
+            PrefixManager pm = new DefaultPrefixManager(
+            		"http://www.ihtsdo.org/");
+            OWLDataFactory df = ont.getOWLOntologyManager().getOWLDataFactory();
+            OWLClass concr = df.getOWLClass(":SCT_24764000", pm);
+            OWLAxiom a1 = df.getOWLAnnotationAssertionAxiom(concr.getIRI(), 
+            	df.getOWLAnnotation(
+            		df.getOWLAnnotationProperty(
+            				OWLRDFVocabulary.RDFS_LABEL.getIRI()),
+            		df.getOWLLiteral("Concretion of appendix (disorder)")
+            	)
+            );
+            OWLAxiom a2 = df.getOWLDeclarationAxiom(concr);
+            OWLAxiom a3 = df.getOWLEquivalentClassesAxiom(concr, 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass(":SCT_18526009", pm),
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm), 
+            			df.getOWLObjectIntersectionOf(
+            				df.getOWLObjectSomeValuesFrom(
+            					df.getOWLObjectProperty(":SCT_116676008", pm), 
+            					df.getOWLClass(":SCT_56381008", pm)
+            				),
+            				df.getOWLObjectSomeValuesFrom(
+            					df.getOWLObjectProperty(":SCT_363698007", pm), 
+            					df.getOWLClass(":SCT_66754008", pm)
+            				)
+            			)
+            		)
+            	)
+            );
+            
+            OWLClass concr2 = df.getOWLClass(":SCT_300307005", pm);
+            OWLAxiom a4 = df.getOWLAnnotationAssertionAxiom(concr2.getIRI(), 
+            	df.getOWLAnnotation(
+                		df.getOWLAnnotationProperty(
+                				OWLRDFVocabulary.RDFS_LABEL.getIRI()),
+                		df.getOWLLiteral("Finding of appendix (finding)")
+                	)
+                );
+            
+            OWLAxiom a5 = df.getOWLDeclarationAxiom(concr2);
+            
+            OWLAxiom a6 = df.getOWLEquivalentClassesAxiom(
+            	df.getOWLClass(":SCT_300307005", pm), 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass(":SCT_118436003", pm),
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm),
+            			df.getOWLObjectSomeValuesFrom(
+            				df.getOWLObjectProperty(":SCT_363698007", pm), 
+            				df.getOWLClass(":SCT_66754008", pm)
+            			)
+            		)
+            	)
+            );
+            
+            OWLAxiom a7 = df.getOWLSubClassOfAxiom(
+            	df.getOWLClass(":SCT_300308000", pm), 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass("SCT_300307005", pm), 
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm), 
+            			df.getOWLObjectSomeValuesFrom(
+            				df.getOWLObjectProperty(":SCT_363698007", pm), 
+            				df.getOWLClass(":SCT_66754008", pm)
+            			)
+            		)
+            	)
+            );
+            
+            OWLAxiom a8 = df.getOWLSubClassOfAxiom(
+            	df.getOWLClass(":SCT_300309008", pm), 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass("SCT_300307005", pm), 
+            		df.getOWLObjectSomeValuesFrom(
+            			df.getOWLObjectProperty(":RoleGroup", pm), 
+            			df.getOWLObjectSomeValuesFrom(
+            				df.getOWLObjectProperty(":SCT_363698007", pm), 
+            				df.getOWLClass(":SCT_66754008", pm)
+            			)
+            		)
+            	)
+            );
+            
+            OWLAxiom a9 = df.getOWLSubClassOfAxiom(
+            	df.getOWLClass(":SCT_422989001", pm), 
+            	df.getOWLObjectIntersectionOf(
+            		df.getOWLClass("SCT_300307005", pm),
+            		df.getOWLClass(":SCT_395557000", pm)
+            	)
+            );
+            
+            manager.addAxiom(ont, a1);
+            manager.addAxiom(ont, a2);
+            manager.addAxiom(ont, a3);
+            manager.addAxiom(ont, a4);
+            manager.addAxiom(ont, a5);
+            manager.addAxiom(ont, a6);
+            manager.addAxiom(ont, a7);
+            manager.addAxiom(ont, a8);
+            manager.addAxiom(ont, a9);
+            
+            // Classify again
+            long start = System.currentTimeMillis();
+            c.flush();
+            
+            // Measure time
+            long time = System.currentTimeMillis() - start;
+            System.out.println("The time:"+time);
+            Assert.assertTrue("Incremental classification took longer than 1 " +
+            		"second: "+time, time < 1000);
+            
+            // Load ontology from inferred form to test for correctness
+            System.out.println("Loading inferred ontology from "+iriInferred);
+            OWLOntologyManager manager2 = OWLManager.createOWLOntologyManager();
+            OWLOntology ont2 = manager2.loadOntology(iriInferred);          
+            
+            System.out.println("Testing parent equality");
+            int numOk = 0;
+            int numWrong = 0;
+            for(OWLClass cl : ont2.getClassesInSignature()) {            	
+            	Set<OWLClass> truth = new HashSet<OWLClass>();
+            	
+            	Set<OWLClassExpression> parents = cl.getSuperClasses(ont2);
+            	for(OWLClassExpression ocl : parents) {
+            		if(!ocl.isAnonymous()) {
+            			truth.add(ocl.asOWLClass());
+            		}
+            	}
+            	
+            	Set<OWLClass> classified = new HashSet<OWLClass>();
+            	NodeSet<OWLClass> otherParents = c.getSuperClasses(cl, true);
+            	classified.addAll(otherParents.getFlattened());
+            	
+            	// Assert parents are equal
+            	if(truth.size() != classified.size()) {
+            		numWrong++;
+            		System.out.println(cl.toStringID()+"("+
+            				DebugUtils.getLabel(cl, ont)+")");
+            		System.out.println("Truth: "+formatClassSet(truth, ont));
+                	System.out.println("Classified: "+
+                			formatClassSet(classified, ont));
+            	} else {
+	            	truth.removeAll(classified);
+	            	
+	            	if(truth.isEmpty()) {
+	            		numOk++;
+	            	} else {
+	            		numWrong++;
+	            		System.out.println(cl.toStringID()+"("+
+	            				DebugUtils.getLabel(cl, ont)+")");
+	            		System.out.println(
+	            				"Truth: "+formatClassSet(truth, ont));
+	                	System.out.println("Classified: "+
+	                			formatClassSet(classified, ont));
+	            	}
+            	}
+            }
+            assertTrue("Num OK: "+numOk+" Num wrong: "+numWrong, numWrong == 0);
+        } catch (OWLOntologyCreationException e) {
+            e.printStackTrace();
+            assertTrue("Error loading ontologies", false);
+        }
 	}
     
     /**
