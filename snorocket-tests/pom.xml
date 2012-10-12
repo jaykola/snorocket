@@ -62,7 +62,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
 	  <argLine> 
-	    -server -Xmx1500m
+	    -server -Xmx3G
 	  </argLine>
         </configuration>
       </plugin>
