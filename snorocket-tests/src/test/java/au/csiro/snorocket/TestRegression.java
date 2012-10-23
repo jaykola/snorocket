@@ -52,14 +52,14 @@ import org.semanticweb.owlapi.reasoner.NullReasonerProgressMonitor;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
+import au.csiro.ontology.Ontology;
+import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.snorocket.core.ClassNode;
 import au.csiro.snorocket.core.Factory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
-import au.csiro.snorocket.core.SnorocketOWLReasoner;
 import au.csiro.snorocket.core.PostProcessedData;
-import au.csiro.snorocket.core.axioms.Inclusion;
-import au.csiro.snorocket.core.importer.RF1Importer;
+import au.csiro.snorocket.core.SnorocketOWLReasoner;
 import au.csiro.snorocket.core.util.DebugUtils;
 import au.csiro.snorocket.core.util.IntIterator;
 
@@ -73,13 +73,17 @@ public class TestRegression {
     @Test
     public void testSnomed_20110731_RF1() {
         // Test the classification of the snomed_20110731 ontology
-        String concepts = TEST_DIR + "sct1_Concepts_Core_INT_20110731.txt";
-        String relations = TEST_DIR
-                + "res1_StatedRelationships_Core_INT_20110731.txt";
-        String canonical = TEST_DIR
-                + "sct1_Relationships_Core_INT_20110731.txt";
+        File concepts = new File(
+                TEST_DIR + "sct1_Concepts_Core_INT_20110731.txt");
+        File descriptions = new File(
+                TEST_DIR + "sct1_Descriptions_en_INT_20110731.txt");
+        File relations = new File(
+                TEST_DIR + "res1_StatedRelationships_Core_INT_20110731.txt");
+        File canonical = new File(
+                TEST_DIR + "sct1_Relationships_Core_INT_20110731.txt");
 
-        testRF1Ontology(concepts, relations, canonical);
+        testRF1Ontology(concepts, descriptions, relations, canonical, 
+                "20110731");
     }
 
     /**
@@ -647,23 +651,23 @@ public class TestRegression {
      * @param canonical
      */
     @SuppressWarnings("resource")
-    private void testRF1Ontology(String concepts, String relations,
-            String canonical) {
+    private void testRF1Ontology(File concepts, File descriptions, 
+            File relations, File canonical, String version) {
         // Classify ontology from stated form
         System.out.println("Classifying ontology from " + concepts);
         IFactory factory = new Factory();
         NormalisedOntology no = new NormalisedOntology(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(factory, concepts, relations);
-        NullReasonerProgressMonitor mon = new NullReasonerProgressMonitor();
-        List<Inclusion> axioms = imp.transform(mon);
+        RF1Importer imp = new RF1Importer(concepts, descriptions, relations, version);
+        Map<String, Ontology> res = imp.getOntologyVersions(
+                new NullReasonerProgressMonitor());
         System.out.println("Loading axioms");
-        no.loadAxioms(new HashSet<>(axioms));
+        no.loadAxioms(new HashSet<>(res.get(version).getAxioms()));
         System.out.println("Running classification");
         no.classify();
         System.out.println("Computing taxonomy");
-        PostProcessedData ppd = new PostProcessedData();
-        ppd.computeDag(factory, no.getSubsumptions(), null);
+        PostProcessedData ppd = new PostProcessedData(factory);
+        ppd.computeDag(no.getSubsumptions(), null);
         System.out.println("Done");
 
         // Load ontology from canonical table
@@ -708,7 +712,7 @@ public class TestRegression {
                 final String conceptId2 = "SCT_"
                         + line.substring(idx3 + 1, idx4);
 
-                if (relId.equals(RF1Importer.isAId)) {
+                if (relId.equals(imp.getMetadata().getIsAId(version))) {
                     Set<String> parents = canonicalParents.get(conceptId1);
                     if (parents == null) {
                         parents = new HashSet<String>();
