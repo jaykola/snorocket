@@ -671,8 +671,7 @@ public class TestRegression {
         System.out.println("Done");
 
         // Load ontology from canonical table
-        System.out
-                .println("Loading ontology from canonical table " + canonical);
+        System.out.println("Loading ontology from canonical table " + canonical);
         BufferedReader br = null;
         try {
 
@@ -706,11 +705,9 @@ public class TestRegression {
                             + "got: " + line);
                 }
 
-                final String conceptId1 = "SCT_"
-                        + line.substring(idx1 + 1, idx2);
+                final String conceptId1 = line.substring(idx1 + 1, idx2);
                 final String relId = line.substring(idx2 + 1, idx3);
-                final String conceptId2 = "SCT_"
-                        + line.substring(idx3 + 1, idx4);
+                final String conceptId2 = line.substring(idx3 + 1, idx4);
 
                 if (relId.equals(imp.getMetadata().getIsAId(version))) {
                     Set<String> parents = canonicalParents.get(conceptId1);
@@ -789,7 +786,7 @@ public class TestRegression {
                 // FIXME: BOTTOM is not connected and TOP is not assigned as a
                 // parent of SNOMED_CT_CONCEPT
                 if (IFactory.BOTTOM.equals(concept)
-                        || "SCT_138875005".equals(concept))
+                        || "138875005".equals(concept))
                     continue;
 
                 Set<String> cps = canonicalParents.get(concept);
