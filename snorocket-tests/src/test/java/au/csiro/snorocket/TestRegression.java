@@ -59,9 +59,8 @@ import au.csiro.snorocket.core.Factory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
 import au.csiro.snorocket.core.PostProcessedData;
-import au.csiro.snorocket.core.SnorocketOWLReasoner;
-import au.csiro.snorocket.core.util.DebugUtils;
 import au.csiro.snorocket.core.util.IntIterator;
+import au.csiro.snorocket.protege.util.DebugUtils;
 
 public class TestRegression {
     final static String TEST_DIR = "src/test/files/";
