@@ -48,11 +48,11 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.PrefixManager;
 import org.semanticweb.owlapi.reasoner.NodeSet;
-import org.semanticweb.owlapi.reasoner.NullReasonerProgressMonitor;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
-import au.csiro.ontology.Ontology;
+import au.csiro.ontology.IOntology;
+import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.snorocket.core.ClassNode;
 import au.csiro.snorocket.core.Factory;
@@ -60,6 +60,7 @@ import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
 import au.csiro.snorocket.core.PostProcessedData;
 import au.csiro.snorocket.core.util.IntIterator;
+import au.csiro.snorocket.protege.SnorocketOWLReasoner;
 import au.csiro.snorocket.protege.util.DebugUtils;
 
 public class TestRegression {
@@ -72,16 +73,16 @@ public class TestRegression {
     @Test
     public void testSnomed_20110731_RF1() {
         // Test the classification of the snomed_20110731 ontology
-        File concepts = new File(
-                TEST_DIR + "sct1_Concepts_Core_INT_20110731.txt");
-        File descriptions = new File(
-                TEST_DIR + "sct1_Descriptions_en_INT_20110731.txt");
-        File relations = new File(
-                TEST_DIR + "res1_StatedRelationships_Core_INT_20110731.txt");
-        File canonical = new File(
-                TEST_DIR + "sct1_Relationships_Core_INT_20110731.txt");
+        File concepts = new File(TEST_DIR
+                + "sct1_Concepts_Core_INT_20110731.txt");
+        File descriptions = new File(TEST_DIR
+                + "sct1_Descriptions_en_INT_20110731.txt");
+        File relations = new File(TEST_DIR
+                + "res1_StatedRelationships_Core_INT_20110731.txt");
+        File canonical = new File(TEST_DIR
+                + "sct1_Relationships_Core_INT_20110731.txt");
 
-        testRF1Ontology(concepts, descriptions, relations, canonical, 
+        testRF1Ontology(concepts, descriptions, relations, canonical,
                 "20110731");
     }
 
@@ -210,10 +211,8 @@ public class TestRegression {
             // Measure time
             long time = System.currentTimeMillis() - start;
             System.out.println("The time:" + time);
-            /*
-             * Assert.assertTrue("Incremental classification took longer than 1 "
-             * + "second: "+time, time < 1000);
-             */
+            // Assert.assertTrue("Incremental classification took longer than 1 "
+            // + "second: "+time, time < 1000);
 
             // Load ontology from inferred form to test for correctness
             System.out.println("Loading inferred ontology from " + iriInferred);
@@ -405,10 +404,9 @@ public class TestRegression {
             // Measure time
             long time = System.currentTimeMillis() - start;
             System.out.println("The time:" + time);
-            /*
-             * Assert.assertTrue("Incremental classification took longer than 1 "
-             * + "second: "+time, time < 1000);
-             */
+
+            // Assert.assertTrue("Incremental classification took longer than 1 "
+            // + "second: "+time, time < 1000);
 
             // Load ontology from inferred form to test for correctness
             System.out.println("Loading inferred ontology from " + iriInferred);
@@ -582,10 +580,9 @@ public class TestRegression {
             // Measure time
             long time = System.currentTimeMillis() - start;
             System.out.println("The time:" + time);
-            /*
-             * Assert.assertTrue("Incremental classification took longer than 1 "
-             * + "second: "+time, time < 1000);
-             */
+
+            // Assert.assertTrue("Incremental classification took longer than 1 "
+            // + "second: "+time, time < 1000);
 
             // Load ontology from inferred form to test for correctness
             System.out.println("Loading inferred ontology from " + iriInferred);
@@ -650,27 +647,28 @@ public class TestRegression {
      * @param canonical
      */
     @SuppressWarnings("resource")
-    private void testRF1Ontology(File concepts, File descriptions, 
+    private void testRF1Ontology(File concepts, File descriptions,
             File relations, File canonical, String version) {
         // Classify ontology from stated form
         System.out.println("Classifying ontology from " + concepts);
-        IFactory factory = new Factory();
-        NormalisedOntology no = new NormalisedOntology(factory);
+        IFactory<String> factory = new Factory<>();
+        NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(concepts, descriptions, relations, version);
-        Map<String, Ontology> res = imp.getOntologyVersions(
-                new NullReasonerProgressMonitor());
+        RF1Importer imp = new RF1Importer(concepts, descriptions, relations,
+                version);
+        Map<String, Map<String, IOntology<String>>> res = imp.getOntologyVersions(new NullProgressMonitor());
         System.out.println("Loading axioms");
-        no.loadAxioms(new HashSet<>(res.get(version).getAxioms()));
+        no.loadAxioms(new HashSet<>(res.values().iterator().next().get(version).getAxioms()));
         System.out.println("Running classification");
         no.classify();
         System.out.println("Computing taxonomy");
-        PostProcessedData ppd = new PostProcessedData(factory);
+        PostProcessedData<String> ppd = new PostProcessedData<>(factory);
         ppd.computeDag(no.getSubsumptions(), null);
         System.out.println("Done");
 
         // Load ontology from canonical table
-        System.out.println("Loading ontology from canonical table " + canonical);
+        System.out
+                .println("Loading ontology from canonical table " + canonical);
         BufferedReader br = null;
         try {
 
@@ -719,10 +717,12 @@ public class TestRegression {
             }
 
             // Build taxonomy from canonical table
+            final String top = "_top_";
+            final String bottom = "_bottom_";
             Map<String, Set<String>> canonicalEquivs = new TreeMap<>();
             Set<String> topSet = new HashSet<>();
-            topSet.add(IFactory.TOP);
-            canonicalEquivs.put(IFactory.TOP, topSet);
+            topSet.add(top);
+            canonicalEquivs.put(top, topSet);
             for (String key : canonicalParents.keySet()) {
                 Set<String> eq = new TreeSet<>();
                 eq.add(key);
@@ -755,7 +755,8 @@ public class TestRegression {
                     }
                 }
             }
-
+            
+            // Compare canonical and classified
             List<String> problems = new ArrayList<String>();
 
             for (IntIterator it = ppd.getConceptIterator(); it.hasNext();) {
@@ -766,8 +767,7 @@ public class TestRegression {
                 // Actual equivalents set
                 Set<String> aeqs = new HashSet<>();
 
-                for (IntIterator it2 = ps.getEquivalentConcepts().iterator(); it2
-                        .hasNext();) {
+                for (IntIterator it2 = ps.getEquivalentConcepts().iterator(); it2.hasNext();) {
                     aeqs.add(factory.lookupConceptId(it2.next()));
                 }
 
@@ -780,11 +780,19 @@ public class TestRegression {
                         aps.add(factory.lookupConceptId(it2.next()));
                     }
                 }
-
-                String concept = factory.lookupConceptId(id);
+                
+                String concept = null;
+                if(id == IFactory.TOP_CONCEPT) {
+                    concept = top;
+                } else if(id == IFactory.BOTTOM_CONCEPT){
+                    concept = bottom;
+                } else {
+                    concept = factory.lookupConceptId(id); 
+                }
+                 
                 // FIXME: BOTTOM is not connected and TOP is not assigned as a
                 // parent of SNOMED_CT_CONCEPT
-                if (IFactory.BOTTOM.equals(concept)
+                if (bottom.equals(concept)
                         || "138875005".equals(concept))
                     continue;
 

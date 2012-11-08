@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import au.csiro.ontology.IOntology;
 import au.csiro.ontology.classification.NullProgressMonitor;
@@ -42,9 +43,11 @@ public class BenchmarkIncremental {
      * spent doing the base classification).
      * 
      * @param baseConcepts
+     * @param baseDescriptions
      * @param baseRelations
      * @param incrementalConcept
      * @param incrementalRelations
+     * @param version
      * @return
      */
     public static Stats runBechmarkRF1(File baseConcepts, File baseDescriptions,
@@ -60,14 +63,15 @@ public class BenchmarkIncremental {
         System.out.println("Importing axioms");
         RF1Importer imp = new RF1Importer(baseConcepts, baseDescriptions, 
                 baseRelations, version);
-        IOntology<String> ont = imp.getOntologyVersions(
+        Map<String, IOntology<String>> ontMap = imp.getOntologyVersions(
                 new NullProgressMonitor()).get(version);
+        IOntology<String> ont = ontMap.values().iterator().next();
         System.out.println("Loading axioms");
         no.loadAxioms(new HashSet<>(ont.getAxioms()));
         System.out.println("Running classification");
         no.classify();
         System.out.println("Computing taxonomy");
-        PostProcessedData ppd = new PostProcessedData(factory);
+        PostProcessedData<String> ppd = new PostProcessedData<>(factory);
         ppd.computeDag(no.getSubsumptions(), null);
         System.out.println("Done");
 
@@ -83,8 +87,9 @@ public class BenchmarkIncremental {
 
         long start = System.currentTimeMillis();
         System.out.println("Transforming axioms");
-        ont = imp.getOntologyVersions(
-                new NullReasonerProgressMonitor()).get(version);
+        ontMap = imp.getOntologyVersions(
+                new NullProgressMonitor()).get(version);
+        ont = ontMap.values().iterator().next();
         res.setAxiomTransformationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Running classification");

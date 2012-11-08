@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import au.csiro.ontology.IOntology;
 import au.csiro.ontology.classification.NullProgressMonitor;
@@ -50,11 +51,15 @@ public class Benchmark {
         // Classify ontology from stated form
         System.out.println("Classifying ontology from " + concepts);
         long start = System.currentTimeMillis();
-        IFactory factory = new Factory();
-        NormalisedOntology no = new NormalisedOntology(factory);
+        IFactory<String> factory = new Factory<>();
+        NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
         RF1Importer imp = new RF1Importer(concepts, descriptions, relations, version);
-        IOntology ont = imp.getOntologyVersions(new NullProgressMonitor()).get(version);
+        Map<String, IOntology<String>> ontMap = 
+                imp.getOntologyVersions(new NullProgressMonitor()).get(version);
+        // We can do this because we know there is only one ontology (RF1 does
+        // not support multiple versions)
+        IOntology<String> ont = ontMap.values().iterator().next();
         res.setAxiomTransformationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Loading axioms");
@@ -66,7 +71,7 @@ public class Benchmark {
         res.setClassificationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Computing taxonomy");
-        PostProcessedData ppd = new PostProcessedData(factory);
+        PostProcessedData<String> ppd = new PostProcessedData<>(factory);
         ppd.computeDag(no.getSubsumptions(), null);
         res.setTaxonomyBuildingTimeMs(System.currentTimeMillis() - start);
         System.out.println("Done");
