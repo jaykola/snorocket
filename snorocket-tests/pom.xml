@@ -18,16 +18,21 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>snorocket-tests</artifactId>
   <packaging>jar</packaging>
-  <name>snorocket-tests</name>
-  <url>http://maven.apache.org</url>
+  <name>Snorocket Regression Tests</name>
   
   <parent>
     <groupId>au.csiro</groupId>
     <artifactId>snorocket-parent</artifactId>
     <version>1.4.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
 
   <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>snorocket-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>au.csiro</groupId>
       <artifactId>ontology-model</artifactId>
