@@ -102,7 +102,7 @@ public class TestRegression {
      * Tests an anatomy ontology that uncovered a bug in the original Snorocket
      * implementation.
      */
-    @Test
+   @Test
     public void testAnatomy2012() {
         File stated = new File(TEST_DIR + "anatomy_2012_stated.owl");
         File inferred = new File(TEST_DIR + "anatomy_2012_inferred.owl");
@@ -767,8 +767,9 @@ public class TestRegression {
                 // Actual equivalents set
                 Set<String> aeqs = new HashSet<>();
 
-                for (IntIterator it2 = ps.getEquivalentConcepts().iterator(); it2.hasNext();) {
-                    aeqs.add(factory.lookupConceptId(it2.next()));
+                for (IntIterator it2 = ps.getEquivalentConcepts().iterator(); 
+                        it2.hasNext();) {
+                    aeqs.add(getConceptId(it2.next(), factory));
                 }
 
                 // Actual parents set
@@ -777,7 +778,7 @@ public class TestRegression {
                 for (ClassNode parent : parents) {
                     for (IntIterator it2 = parent.getEquivalentConcepts()
                             .iterator(); it2.hasNext();) {
-                        aps.add(factory.lookupConceptId(it2.next()));
+                        aps.add(getConceptId(it2.next(), factory));
                     }
                 }
                 
@@ -853,6 +854,24 @@ public class TestRegression {
                     br.close();
                 } catch (Exception e) {
                 }
+        }
+    }
+    
+    /**
+     * Looks up a concept id in a string factory. This method is needed because
+     * top and bottom are not of type T (in this case String).
+     * 
+     * @param id
+     * @param factory
+     * @return
+     */
+    private String getConceptId(int id, IFactory<String> factory) {
+        if(id == 0) {
+            return "_top_";
+        } else if(id == 1) {
+            return "_bottom_";
+        } else {
+            return factory.lookupConceptId(id);
         }
     }
 
