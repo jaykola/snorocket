@@ -34,7 +34,7 @@ public class Benchmark {
     final static String RES_DIR = "src/main/resources/";
     final static String OUT_DIR = "src/site/resources/";
 
-    public static final String VERSION = "2.0.0";
+    public static final String VERSION = "2.1.0";
 
     /**
      * Runs the benchmark using an RF1 file as input.
@@ -54,12 +54,17 @@ public class Benchmark {
         IFactory<String> factory = new Factory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(concepts, descriptions, relations, version);
-        Map<String, IOntology<String>> ontMap = 
-                imp.getOntologyVersions(new NullProgressMonitor()).get(version);
+        RF1Importer imp = new RF1Importer(concepts, descriptions, relations, 
+                version);
+        Map<String, IOntology<String>> ontMap = imp.getOntologyVersions(
+                new NullProgressMonitor()).get("snomed");
         // We can do this because we know there is only one ontology (RF1 does
         // not support multiple versions)
-        IOntology<String> ont = ontMap.values().iterator().next();
+        IOntology<String> ont = ontMap.get(version);
+        if(ont == null) {
+            System.out.println("Could not find version "+version+
+                    " in input files");
+        }
         res.setAxiomTransformationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Loading axioms");

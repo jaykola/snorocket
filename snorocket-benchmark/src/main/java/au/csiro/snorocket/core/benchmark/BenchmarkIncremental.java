@@ -35,7 +35,7 @@ public class BenchmarkIncremental {
     final static String RES_DIR = "src/main/resources/";
     final static String OUT_DIR = "src/site/resources/";
 
-    public static final String VERSION = "2.0.0";
+    public static final String VERSION = "2.1.0";
 
     /**
      * Runs the incremental benchmark using RF1 files as input. Only the time
@@ -64,8 +64,12 @@ public class BenchmarkIncremental {
         RF1Importer imp = new RF1Importer(baseConcepts, baseDescriptions, 
                 baseRelations, version);
         Map<String, IOntology<String>> ontMap = imp.getOntologyVersions(
-                new NullProgressMonitor()).get(version);
-        IOntology<String> ont = ontMap.values().iterator().next();
+                new NullProgressMonitor()).get("snomed");
+        IOntology<String> ont = ontMap.get(version);
+        if(ont == null) {
+            System.out.println("Could not find version "+version+
+                    " in input files");
+        }
         System.out.println("Loading axioms");
         no.loadAxioms(new HashSet<>(ont.getAxioms()));
         System.out.println("Running classification");
@@ -88,8 +92,8 @@ public class BenchmarkIncremental {
         long start = System.currentTimeMillis();
         System.out.println("Transforming axioms");
         ontMap = imp.getOntologyVersions(
-                new NullProgressMonitor()).get(version);
-        ont = ontMap.values().iterator().next();
+                new NullProgressMonitor()).get("snomed");
+        ont = ontMap.get(version);
         res.setAxiomTransformationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Running classification");
