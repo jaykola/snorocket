@@ -52,6 +52,7 @@ import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
 import au.csiro.ontology.IOntology;
+import au.csiro.ontology.IOntology.AxiomForm;
 import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.snorocket.core.ClassNode;
@@ -658,7 +659,7 @@ public class TestRegression {
                 version);
         Map<String, Map<String, IOntology<String>>> res = imp.getOntologyVersions(new NullProgressMonitor());
         System.out.println("Loading axioms");
-        no.loadAxioms(new HashSet<>(res.values().iterator().next().get(version).getAxioms()));
+        no.loadAxioms(new HashSet<>(res.values().iterator().next().get(version).getAxioms(AxiomForm.STATED)));
         System.out.println("Running classification");
         no.classify();
         System.out.println("Computing taxonomy");

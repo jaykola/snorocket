@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import au.csiro.ontology.IOntology;
+import au.csiro.ontology.IOntology.AxiomForm;
 import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.snorocket.core.Factory;
@@ -71,7 +72,7 @@ public class BenchmarkIncremental {
                     " in input files");
         }
         System.out.println("Loading axioms");
-        no.loadAxioms(new HashSet<>(ont.getAxioms()));
+        no.loadAxioms(new HashSet<>(ont.getAxioms(AxiomForm.STATED)));
         System.out.println("Running classification");
         no.classify();
         System.out.println("Computing taxonomy");
@@ -97,7 +98,7 @@ public class BenchmarkIncremental {
         res.setAxiomTransformationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Running classification");
-        no.classifyIncremental(new HashSet<>(ont.getAxioms()));
+        no.classifyIncremental(new HashSet<>(ont.getAxioms(AxiomForm.STATED)));
         res.setClassificationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Computing taxonomy");

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import au.csiro.ontology.IOntology;
+import au.csiro.ontology.IOntology.AxiomForm;
 import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.snorocket.core.Factory;
@@ -68,7 +69,7 @@ public class Benchmark {
         res.setAxiomTransformationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Loading axioms");
-        no.loadAxioms(new HashSet<>(ont.getAxioms()));
+        no.loadAxioms(new HashSet<>(ont.getAxioms(AxiomForm.STATED)));
         res.setAxiomLoadingTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Running classification");
