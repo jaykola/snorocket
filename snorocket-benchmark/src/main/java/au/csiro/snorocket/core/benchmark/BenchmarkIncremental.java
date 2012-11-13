@@ -51,9 +51,9 @@ public class BenchmarkIncremental {
      * @param version
      * @return
      */
-    public static Stats runBechmarkRF1(File baseConcepts, File baseDescriptions,
-            File baseRelations, File incrementalConcepts,
-            File incrementalRelations, String version) {
+    public static Stats runBechmarkRF1(File baseConcepts, File baseRelations, 
+            File incrementalConcepts, File incrementalRelations, 
+            String version) {
         Stats res = new Stats();
 
         // Classify ontology from stated form
@@ -62,8 +62,7 @@ public class BenchmarkIncremental {
         IFactory<String> factory = new Factory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(baseConcepts, baseDescriptions, 
-                baseRelations, version);
+        RF1Importer imp = new RF1Importer(baseConcepts, baseRelations, version);
         Map<String, IOntology<String>> ontMap = imp.getOntologyVersions(
                 new NullProgressMonitor()).get("snomed");
         IOntology<String> ont = ontMap.get(version);
@@ -87,7 +86,7 @@ public class BenchmarkIncremental {
         // a test case for incremental classification using RF1.
 
         System.out.println("Running incremental classification");
-        imp = new RF1Importer(incrementalConcepts, null, incrementalRelations, 
+        imp = new RF1Importer(incrementalConcepts, incrementalRelations, 
                 version);
 
         long start = System.currentTimeMillis();
@@ -116,12 +115,11 @@ public class BenchmarkIncremental {
 
         if ("RF1".equals(type)) {
             File baseConcepts = new File(RES_DIR + args[1]);
-            File baseDescriptions = new File(RES_DIR + args[2]);
-            File baseRelations = new File(RES_DIR + args[3]);
-            File incConcepts = new File(RES_DIR + args[4]);
-            File incRelations = new File(RES_DIR + args[5]);
-            String version = args[6];
-            int numRuns = Integer.parseInt(args[7]);
+            File baseRelations = new File(RES_DIR + args[2]);
+            File incConcepts = new File(RES_DIR + args[3]);
+            File incRelations = new File(RES_DIR + args[4]);
+            String version = args[5];
+            int numRuns = Integer.parseInt(args[6]);
             String outputFile = OUT_DIR + "inc_benchmark_" + VERSION + "_"
                     + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 
@@ -135,8 +133,7 @@ public class BenchmarkIncremental {
 
             for (int j = 0; j < numRuns; j++) {
                 Stats stats = BenchmarkIncremental.runBechmarkRF1(baseConcepts,
-                        baseDescriptions, baseRelations, incConcepts, 
-                        incRelations, version);
+                        baseRelations, incConcepts, incRelations, version);
 
                 sb.append(sdf.format(Calendar.getInstance().getTime()));
                 sb.append(",");

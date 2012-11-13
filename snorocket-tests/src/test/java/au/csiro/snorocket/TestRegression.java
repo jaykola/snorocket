@@ -655,8 +655,7 @@ public class TestRegression {
         IFactory<String> factory = new Factory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(concepts, descriptions, relations,
-                version);
+        RF1Importer imp = new RF1Importer(concepts, relations, version);
         Map<String, Map<String, IOntology<String>>> res = imp.getOntologyVersions(new NullProgressMonitor());
         System.out.println("Loading axioms");
         no.loadAxioms(new HashSet<>(res.values().iterator().next().get(version).getAxioms(AxiomForm.STATED)));

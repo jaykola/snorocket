@@ -45,8 +45,8 @@ public class Benchmark {
      * @param relationships
      *            The stated relationships file.
      */
-    public static Stats runBechmarkRF1(File concepts, File descriptions, 
-            File relations, String version) {
+    public static Stats runBechmarkRF1(File concepts, File relations, 
+            String version) {
         Stats res = new Stats();
 
         // Classify ontology from stated form
@@ -55,8 +55,7 @@ public class Benchmark {
         IFactory<String> factory = new Factory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(concepts, descriptions, relations, 
-                version);
+        RF1Importer imp = new RF1Importer(concepts, relations, version);
         Map<String, IOntology<String>> ontMap = imp.getOntologyVersions(
                 new NullProgressMonitor()).get("snomed");
         // We can do this because we know there is only one ontology (RF1 does
@@ -92,10 +91,9 @@ public class Benchmark {
 
         if ("RF1".equals(type)) {
             File concepts = new File(RES_DIR + args[1]);
-            File descriptions = new File(RES_DIR + args[2]);
-            File relations = new File(RES_DIR + args[3]);
-            String version = args[4];
-            int numRuns = Integer.parseInt(args[5]);
+            File relations = new File(RES_DIR + args[2]);
+            String version = args[3];
+            int numRuns = Integer.parseInt(args[4]);
             String outputFile = OUT_DIR + "benchmark_" + VERSION + "_"
                     + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 
@@ -108,8 +106,8 @@ public class Benchmark {
                     + "Max Memory (bytes)\n");
 
             for (int j = 0; j < numRuns; j++) {
-                Stats stats = Benchmark.runBechmarkRF1(concepts, descriptions, 
-                        relations, version);
+                Stats stats = Benchmark.runBechmarkRF1(concepts, relations, 
+                        version);
 
                 sb.append(sdf.format(Calendar.getInstance().getTime()));
                 sb.append(",");
