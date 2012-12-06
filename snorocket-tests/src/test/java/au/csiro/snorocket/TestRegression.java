@@ -78,6 +78,7 @@ public class TestRegression {
      */
     @Test
     public void testSnomed_20110731_RF1() {
+        System.out.println("Running testSnomed_20110731_RF1");
         // Test the classification of the snomed_20110731 ontology
         File concepts = new File(TEST_DIR
                 + "sct1_Concepts_Core_INT_20110731.txt.gz");
@@ -97,6 +98,7 @@ public class TestRegression {
      */
     @Test
     public void testSmall() {
+        System.out.println("Running testSmall");
         File stated = new File(TEST_DIR + "small_stated.owl");
         File inferred = new File(TEST_DIR + "small_inferred.owl");
         testOntology(stated, inferred, false);
@@ -108,6 +110,7 @@ public class TestRegression {
      */
    @Test
     public void testAnatomy2012() {
+        System.out.println("Running testAnatomy2012");
         File stated = new File(TEST_DIR + "anatomy_2012_stated.owl.gz");
         File inferred = new File(TEST_DIR + "anatomy_2012_inferred.owl.gz");
         testOntology(stated, inferred, false);
@@ -120,6 +123,7 @@ public class TestRegression {
      */
     @Test
     public void testAMT_20120229() {
+        System.out.println("Running testAMT_20120229");
         File stated = new File(TEST_DIR + "amt_20120229_stated.owl.gz");
         File inferred = new File(TEST_DIR + "amt_20120229_classified.owl.gz");
         testOntology(stated, inferred, false);
@@ -148,6 +152,8 @@ public class TestRegression {
      */
     @Test
     public void testSnomed_20120131_Incremental() {
+        System.out.println("Running testSnomed_20120131_Incremental");
+        
         File stated = new File(TEST_DIR + "snomed_20120131_inc_stated.owl.gz");
         File inferred = new File(TEST_DIR + "snomed_20120131_inferred.owl.gz");
 
@@ -209,7 +215,7 @@ public class TestRegression {
 
             // Measure time
             long time = System.currentTimeMillis() - start;
-            System.out.println("The time:" + time);
+            System.out.println("Classified incrementally in:" + time+"ms");
             // Assert.assertTrue("Incremental classification took longer than 1 "
             // + "second: "+time, time < 1000);
 
@@ -297,6 +303,8 @@ public class TestRegression {
      */
     @Test
     public void testSnomed_20120131_Incremental2() {
+        System.out.println("Running testSnomed_20120131_Incremental2");
+        
         File stated = new File(TEST_DIR + "snomed_20120131_inc2_stated.owl.gz");
         File inferred = new File(TEST_DIR + "snomed_20120131_inferred.owl.gz");
 
@@ -406,7 +414,7 @@ public class TestRegression {
 
             // Measure time
             long time = System.currentTimeMillis() - start;
-            System.out.println("The time:" + time);
+            System.out.println("Classified incrementally in:" + time+"ms");
 
             // Assert.assertTrue("Incremental classification took longer than 1 "
             // + "second: "+time, time < 1000);
@@ -477,6 +485,8 @@ public class TestRegression {
      */
     @Test
     public void testSnomed_20120131_Incremental3() {
+        System.out.println("Running testSnomed_20120131_Incremental3");
+        
         File stated = new File(TEST_DIR + "snomed_20120131_inc_stated.owl.gz");
         File inferred = new File(TEST_DIR + "snomed_20120131_inferred.owl.gz");
 
@@ -586,7 +596,7 @@ public class TestRegression {
 
             // Measure time
             long time = System.currentTimeMillis() - start;
-            System.out.println("The time:" + time);
+            System.out.println("Classified incrementally in:" + time+"ms");
 
             // Assert.assertTrue("Incremental classification took longer than 1 "
             // + "second: "+time, time < 1000);
