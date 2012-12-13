@@ -27,8 +27,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +43,6 @@ import java.util.zip.GZIPInputStream;
 import org.junit.Assert;
 import org.junit.Test;
 import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
@@ -70,7 +69,7 @@ import au.csiro.snorocket.protege.SnorocketOWLReasoner;
 import au.csiro.snorocket.protege.util.DebugUtils;
 
 public class TestRegression {
-    final static String TEST_DIR = "src/test/files/";
+    final static String TEST_DIR = "src/test/resources/";
 
     /**
      * Tests the classification process using the 2011 version of SNOMED-CT and
@@ -79,18 +78,14 @@ public class TestRegression {
     @Test
     public void testSnomed_20110731_RF1() {
         System.out.println("Running testSnomed_20110731_RF1");
-        // Test the classification of the snomed_20110731 ontology
-        File concepts = new File(TEST_DIR
-                + "sct1_Concepts_Core_INT_20110731.txt.gz");
-        File descriptions = new File(TEST_DIR
-                + "sct1_Descriptions_en_INT_20110731.txt.gz");
-        File relations = new File(TEST_DIR
-                + "res1_StatedRelationships_Core_INT_20110731.txt.gz");
-        File canonical = new File(TEST_DIR
-                + "sct1_Relationships_Core_INT_20110731.txt.gz");
-
-        testRF1Ontology(concepts, descriptions, relations, canonical,
-                "20110731");
+        
+        // Test the classification of the snomed_20110731 ontology        
+        InputStream concepts = this.getClass().getResourceAsStream("/sct1_Concepts_Core_INT_20110731.txt");
+        InputStream descriptions = this.getClass().getResourceAsStream("/sct1_Descriptions_en_INT_20110731.txt");
+        InputStream relations = this.getClass().getResourceAsStream("/res1_StatedRelationships_Core_INT_20110731.txt");
+        InputStream canonical = this.getClass().getResourceAsStream("/sct1_Relationships_Core_INT_20110731.txt");
+        
+        testRF1Ontology(concepts, descriptions, relations, canonical, "20110731");
     }
 
     /**
@@ -108,11 +103,11 @@ public class TestRegression {
      * Tests an anatomy ontology that uncovered a bug in the original Snorocket
      * implementation.
      */
-   @Test
+    @Test
     public void testAnatomy2012() {
         System.out.println("Running testAnatomy2012");
-        File stated = new File(TEST_DIR + "anatomy_2012_stated.owl.gz");
-        File inferred = new File(TEST_DIR + "anatomy_2012_inferred.owl.gz");
+        InputStream stated = this.getClass().getResourceAsStream("/anatomy_2012_stated.owl");
+        InputStream inferred = this.getClass().getResourceAsStream("/anatomy_2012_inferred.owl");
         testOntology(stated, inferred, false);
     }
 
@@ -124,8 +119,8 @@ public class TestRegression {
     @Test
     public void testAMT_20120229() {
         System.out.println("Running testAMT_20120229");
-        File stated = new File(TEST_DIR + "amt_20120229_stated.owl.gz");
-        File inferred = new File(TEST_DIR + "amt_20120229_classified.owl.gz");
+        InputStream stated = this.getClass().getResourceAsStream("/amt_20120229_stated.owl");
+        InputStream inferred = this.getClass().getResourceAsStream("/amt_20120229_classified.owl");
         testOntology(stated, inferred, false);
     }
 
@@ -154,14 +149,12 @@ public class TestRegression {
     public void testSnomed_20120131_Incremental() {
         System.out.println("Running testSnomed_20120131_Incremental");
         
-        File stated = new File(TEST_DIR + "snomed_20120131_inc_stated.owl.gz");
-        File inferred = new File(TEST_DIR + "snomed_20120131_inferred.owl.gz");
+        InputStream stated = this.getClass().getResourceAsStream("/snomed_20120131_inc_stated.owl");
+        InputStream inferred = this.getClass().getResourceAsStream("/snomed_20120131_inferred.owl");
 
         try {
-            System.out.println("Loading stated ontology from " + stated);
             OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-            OWLOntology ont = manager.loadOntologyFromOntologyDocument(
-                    new GZIPInputStream(new FileInputStream(stated)));
+            OWLOntology ont = manager.loadOntologyFromOntologyDocument(stated);
 
             // Classify ontology from stated form
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
@@ -215,15 +208,13 @@ public class TestRegression {
 
             // Measure time
             long time = System.currentTimeMillis() - start;
-            System.out.println("Classified incrementally in:" + time+"ms");
+            System.out.println("Classified incrementally in: " + time+"ms");
             // Assert.assertTrue("Incremental classification took longer than 1 "
             // + "second: "+time, time < 1000);
 
             // Load ontology from inferred form to test for correctness
-            System.out.println("Loading inferred ontology from " + inferred);
             OWLOntologyManager manager2 = OWLManager.createOWLOntologyManager();
-            OWLOntology ont2 = manager2.loadOntologyFromOntologyDocument(
-                        new GZIPInputStream(new FileInputStream(inferred)));
+            OWLOntology ont2 = manager2.loadOntologyFromOntologyDocument(inferred);
 
             System.out.println("Testing parent equality");
             int numOk = 0;
@@ -271,10 +262,6 @@ public class TestRegression {
         } catch (OWLOntologyCreationException e) {
             e.printStackTrace();
             assertTrue("Error loading ontologies", false);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -305,14 +292,13 @@ public class TestRegression {
     public void testSnomed_20120131_Incremental2() {
         System.out.println("Running testSnomed_20120131_Incremental2");
         
-        File stated = new File(TEST_DIR + "snomed_20120131_inc2_stated.owl.gz");
-        File inferred = new File(TEST_DIR + "snomed_20120131_inferred.owl.gz");
+        InputStream stated = this.getClass().getResourceAsStream("/snomed_20120131_inc2_stated.owl");
+        InputStream inferred = this.getClass().getResourceAsStream("/snomed_20120131_inferred.owl");
 
         try {
-            System.out.println("Loading stated ontology from " + stated);
+            System.out.println("Loading stated ontology");
             OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-            OWLOntology ont = manager.loadOntologyFromOntologyDocument(
-                        new GZIPInputStream(new FileInputStream(stated)));
+            OWLOntology ont = manager.loadOntologyFromOntologyDocument(stated);
 
             // Classify ontology from stated form
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
@@ -414,16 +400,15 @@ public class TestRegression {
 
             // Measure time
             long time = System.currentTimeMillis() - start;
-            System.out.println("Classified incrementally in:" + time+"ms");
+            System.out.println("Classified incrementally in: " + time+"ms");
 
             // Assert.assertTrue("Incremental classification took longer than 1 "
             // + "second: "+time, time < 1000);
 
             // Load ontology from inferred form to test for correctness
-            System.out.println("Loading inferred ontology from " + inferred);
+            System.out.println("Loading inferred ontology");
             OWLOntologyManager manager2 = OWLManager.createOWLOntologyManager();
-            OWLOntology ont2 = manager2.loadOntologyFromOntologyDocument(
-                        new GZIPInputStream(new FileInputStream(inferred)));
+            OWLOntology ont2 = manager2.loadOntologyFromOntologyDocument(inferred);
 
             System.out.println("Testing parent equality");
             int numOk = 0;
@@ -471,10 +456,6 @@ public class TestRegression {
         } catch (OWLOntologyCreationException e) {
             e.printStackTrace();
             assertTrue("Error loading ontologies", false);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -487,14 +468,13 @@ public class TestRegression {
     public void testSnomed_20120131_Incremental3() {
         System.out.println("Running testSnomed_20120131_Incremental3");
         
-        File stated = new File(TEST_DIR + "snomed_20120131_inc_stated.owl.gz");
-        File inferred = new File(TEST_DIR + "snomed_20120131_inferred.owl.gz");
+        InputStream stated = this.getClass().getResourceAsStream("/snomed_20120131_inc_stated.owl");
+        InputStream inferred = this.getClass().getResourceAsStream("/snomed_20120131_inferred.owl");
 
         try {
-            System.out.println("Loading stated ontology from " + stated);
+            System.out.println("Loading stated ontology");
             OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-            OWLOntology ont = manager.loadOntologyFromOntologyDocument(
-                        new GZIPInputStream(new FileInputStream(stated)));
+            OWLOntology ont = manager.loadOntologyFromOntologyDocument(stated);
 
             // Classify ontology from stated form
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
@@ -596,16 +576,15 @@ public class TestRegression {
 
             // Measure time
             long time = System.currentTimeMillis() - start;
-            System.out.println("Classified incrementally in:" + time+"ms");
+            System.out.println("Classified incrementally in: " + time+"ms");
 
             // Assert.assertTrue("Incremental classification took longer than 1 "
             // + "second: "+time, time < 1000);
 
             // Load ontology from inferred form to test for correctness
-            System.out.println("Loading inferred ontology from " + inferred);
+            System.out.println("Loading inferred ontology");
             OWLOntologyManager manager2 = OWLManager.createOWLOntologyManager();
-            OWLOntology ont2 = manager2.loadOntologyFromOntologyDocument(
-                        new GZIPInputStream(new FileInputStream(inferred)));
+            OWLOntology ont2 = manager2.loadOntologyFromOntologyDocument(inferred);
 
             System.out.println("Testing parent equality");
             int numOk = 0;
@@ -653,10 +632,6 @@ public class TestRegression {
         } catch (OWLOntologyCreationException e) {
             e.printStackTrace();
             assertTrue("Error loading ontologies", false);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -668,11 +643,10 @@ public class TestRegression {
      * @param relations
      * @param canonical
      */
-    @SuppressWarnings("resource")
-    private void testRF1Ontology(File concepts, File descriptions,
-            File relations, File canonical, String version) {
+    private void testRF1Ontology(InputStream concepts, InputStream descriptions,
+            InputStream relations, InputStream canonical, String version) {
         // Classify ontology from stated form
-        System.out.println("Classifying ontology from " + concepts);
+        System.out.println("Classifying ontology");
         IFactory<String> factory = new Factory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
@@ -688,17 +662,13 @@ public class TestRegression {
         System.out.println("Done");
 
         // Load ontology from canonical table
-        System.out.println("Loading ontology from canonical table " + canonical);
+        System.out.println("Loading ontology from canonical table");
         BufferedReader br = null;
         try {
 
             Map<String, Set<String>> canonicalParents = new TreeMap<>();
             
-            if(canonical.getName().endsWith(".gz")) {
-                br = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(canonical))));
-            } else {
-                br = new BufferedReader(new FileReader(canonical));
-            }
+            br = new BufferedReader(new InputStreamReader(canonical));
             String line;
             while (null != (line = br.readLine())) {
                 if (line.trim().length() < 1) {
@@ -900,10 +870,10 @@ public class TestRegression {
      * correctly classified version. All the classes of the ontologies are
      * traversed and their direct parents are compared.
      * 
-     * @param iriStated
-     *            The {@link IRI} of the stated ontology.
+     * @param stated
+     *            The {@link File} that contains the stated ontology.
      * @param iriInferred
-     *            The {@link IRI} of the classified ontology.
+     *            The {@link File} that contains the classified ontology.
      * @param ignoreBottom
      *            Indicates if the bottom node should be ignored in the
      *            comparison (some generated inferred files do not connect
@@ -912,13 +882,7 @@ public class TestRegression {
     private void testOntology(File stated, File inferred, boolean ignoreBottom) {
         try {
             OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-            OWLOntology ont = null;
-            if(stated.getName().endsWith("gz")) {
-                ont = manager.loadOntologyFromOntologyDocument(
-                        new GZIPInputStream(new FileInputStream(stated)));
-            } else {
-                ont = manager.loadOntologyFromOntologyDocument(stated);
-            }
+            OWLOntology ont = manager.loadOntologyFromOntologyDocument(stated);
 
             // Classify ontology from stated form
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, false);
@@ -927,7 +891,7 @@ public class TestRegression {
             c.synchronise();
 
             // Load ontology from inferred form
-            System.out.println("Loading inferred ontology from " + inferred);
+            System.out.println("Loading inferred ontology");
             OWLOntologyManager manager2 = OWLManager.createOWLOntologyManager();
             OWLOntology ont2 = null;
             if(inferred.getName().endsWith("gz")) {
@@ -995,6 +959,92 @@ public class TestRegression {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Classifies the stated version of an ontology and compares it to a
+     * correctly classified version. All the classes of the ontologies are
+     * traversed and their direct parents are compared.
+     * 
+     * @param stated
+     *            The {@link InputStream} of the stated ontology.
+     * @param inferred
+     *            The {@link InputStream} of the classified ontology.
+     * @param ignoreBottom
+     *            Indicates if the bottom node should be ignored in the
+     *            comparison (some generated inferred files do not connect
+     *            bottom).
+     */
+    private void testOntology(InputStream stated, InputStream inferred, boolean ignoreBottom) {
+        try {
+            OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+            OWLOntology ont = manager.loadOntologyFromOntologyDocument(stated);
+            // Classify ontology from stated form
+            SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, false);
+
+            System.out.println("Classifying");
+            c.synchronise();
+
+            // Load ontology from inferred form
+            System.out.println("Loading inferred ontology");
+            OWLOntologyManager manager2 = OWLManager.createOWLOntologyManager();
+            OWLOntology ont2 = manager2.loadOntologyFromOntologyDocument(inferred);
+
+            System.out.println("Testing parent equality");
+            int numOk = 0;
+            int numWrong = 0;
+            for (OWLClass cl : ont2.getClassesInSignature()) {
+
+                // Ignore owl:nothing - some generated inferred files do not
+                // connect childless nodes to owl:nothing
+                if (ignoreBottom
+                        && cl.toStringID().equals(
+                                "http://www.w3.org/2002/07/owl#Nothing"))
+                    continue;
+
+                Set<OWLClass> truth = new HashSet<OWLClass>();
+
+                Set<OWLClassExpression> parents = cl.getSuperClasses(ont2);
+                for (OWLClassExpression ocl : parents) {
+                    if (!ocl.isAnonymous()) {
+                        truth.add(ocl.asOWLClass());
+                    }
+                }
+
+                Set<OWLClass> classified = new HashSet<OWLClass>();
+                NodeSet<OWLClass> otherParents = c.getSuperClasses(cl, true);
+                classified.addAll(otherParents.getFlattened());
+
+                // Assert parents are equal
+                if (truth.size() != classified.size()) {
+                    numWrong++;
+                    System.out.println(cl.toStringID() + "("
+                            + DebugUtils.getLabel(cl, ont) + ")");
+                    System.out.println("Truth: " + formatClassSet(truth, ont));
+                    System.out.println("Classified: "
+                            + formatClassSet(classified, ont));
+                } else {
+                    truth.removeAll(classified);
+
+                    if (truth.isEmpty()) {
+                        numOk++;
+                    } else {
+                        numWrong++;
+                        System.out.println(cl.toStringID() + "("
+                                + DebugUtils.getLabel(cl, ont) + ")");
+                        System.out.println("Truth: "
+                                + formatClassSet(truth, ont));
+                        System.out.println("Classified: "
+                                + formatClassSet(classified, ont));
+                    }
+                }
+            }
+            assertTrue("Num OK: " + numOk + " Num wrong: " + numWrong,
+                    numWrong == 0);
+        } catch (OWLOntologyCreationException e) {
+            e.printStackTrace();
+            assertTrue("Error loading ontologies", false);
         }
     }
 

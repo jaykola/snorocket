@@ -32,7 +32,6 @@ import au.csiro.snorocket.core.PostProcessedData;
  */
 public class Benchmark {
 
-    final static String RES_DIR = "src/main/resources/";
     final static String OUT_DIR = "src/site/resources/";
 
     public static final String VERSION = "2.1.0";
@@ -45,17 +44,24 @@ public class Benchmark {
      * @param relationships
      *            The stated relationships file.
      */
-    public static Stats runBechmarkRF1(File concepts, File relations, 
-            String version) {
+    public Stats runBechmarkRF1() {
         Stats res = new Stats();
-
+        
+        String version = "20110731";
+        
         // Classify ontology from stated form
-        System.out.println("Classifying ontology from " + concepts);
+        System.out.println("Classifying ontology");
         long start = System.currentTimeMillis();
         IFactory<String> factory = new Factory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(concepts, relations, version);
+        
+        RF1Importer imp = new RF1Importer(
+                this.getClass().getResourceAsStream(
+                        "/sct1_Concepts_Core_INT_20110731.txt"), 
+                this.getClass().getResourceAsStream(
+                        "/res1_StatedRelationships_Core_INT_20110731.txt"), 
+                version);
         Map<String, IOntology<String>> ontMap = imp.getOntologyVersions(
                 new NullProgressMonitor()).get("snomed");
         // We can do this because we know there is only one ontology (RF1 does
@@ -90,32 +96,28 @@ public class Benchmark {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH_mm_ss");
 
         if ("RF1".equals(type)) {
-            File concepts = new File(RES_DIR + args[1]);
-            File relations = new File(RES_DIR + args[2]);
-            String version = args[3];
-            int numRuns = Integer.parseInt(args[4]);
+            int numRuns = Integer.parseInt(args[1]);
             String outputFile = OUT_DIR + "benchmark_" + VERSION + "_"
                     + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 
             StringBuilder sb = new StringBuilder();
-            sb.append("Date,Threads,VM Parameters,Concepts File,"
-                    + "Relationships File,Snorocket Version,Axiom "
-                    + "Transformation Time (ms),Axiom Loading Time (ms),"
-                    + "Classification Time(ms),Taxonomy Construction "
-                    + "Time(ms), Total Time(ms), Used Memory(bytes), "
-                    + "Max Memory (bytes)\n");
-
+            sb.append("Date,Threads,VM Parameters,Snomed Version," +
+            		"Snorocket Version,Axiom Transformation Time (ms)," +
+            		"Axiom Loading Time (ms),Classification Time(ms)," +
+            		"Taxonomy Construction Time(ms),Total Time(ms)," +
+            		"Used Memory(bytes),Max Memory (bytes)\n");
+            
+            Benchmark b = new Benchmark();
             for (int j = 0; j < numRuns; j++) {
-                Stats stats = Benchmark.runBechmarkRF1(concepts, relations, 
-                        version);
+                Stats stats = b.runBechmarkRF1();
 
                 sb.append(sdf.format(Calendar.getInstance().getTime()));
                 sb.append(",");
                 sb.append(Runtime.getRuntime().availableProcessors());
                 sb.append(",");
 
-                RuntimeMXBean RuntimemxBean = ManagementFactory
-                        .getRuntimeMXBean();
+                RuntimeMXBean RuntimemxBean = 
+                        ManagementFactory.getRuntimeMXBean();
                 List<String> arguments = RuntimemxBean.getInputArguments();
                 for (int i = 0; i < arguments.size(); i++) {
                     sb.append(arguments.get(i));
@@ -123,9 +125,7 @@ public class Benchmark {
                         sb.append(" ");
                 }
                 sb.append(",");
-                sb.append(concepts);
-                sb.append(",");
-                sb.append(relations);
+                sb.append("SNOMED_20110731");
                 sb.append(",");
                 sb.append(VERSION);
                 sb.append(",");
@@ -148,20 +148,11 @@ public class Benchmark {
                 System.gc();
             }
 
-            BufferedWriter bw = null;
-            try {
-                bw = new BufferedWriter(new FileWriter(
-                        new File(outputFile).getAbsoluteFile()));
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(
+                        new File(outputFile).getAbsoluteFile()))) {
                 bw.write(sb.toString());
             } catch (Exception e) {
                 e.printStackTrace();
-            } finally {
-                if (bw != null)
-                    try {
-                        bw.close();
-                    } catch (Exception e) {
-                    }
-                ;
             }
         } else {
             System.out.println("Unknown input type " + type);

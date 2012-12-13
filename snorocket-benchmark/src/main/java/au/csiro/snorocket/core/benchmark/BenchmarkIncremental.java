@@ -33,7 +33,6 @@ import au.csiro.snorocket.core.PostProcessedData;
  */
 public class BenchmarkIncremental {
 
-    final static String RES_DIR = "src/main/resources/";
     final static String OUT_DIR = "src/site/resources/";
 
     public static final String VERSION = "2.1.0";
@@ -51,18 +50,23 @@ public class BenchmarkIncremental {
      * @param version
      * @return
      */
-    public static Stats runBechmarkRF1(File baseConcepts, File baseRelations, 
-            File incrementalConcepts, File incrementalRelations, 
-            String version) {
+    public Stats runBechmarkRF1() {
         Stats res = new Stats();
-
+        
+        String version = "20110731";
+        
         // Classify ontology from stated form
-        System.out.println("Classifying base ontology from " + baseConcepts);
+        System.out.println("Classifying base ontology");
 
         IFactory<String> factory = new Factory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(baseConcepts, baseRelations, version);
+        RF1Importer imp = new RF1Importer(
+                this.getClass().getResourceAsStream(
+                        "/sct1_Concepts_Core_INT_20110731_base.txt"), 
+                this.getClass().getResourceAsStream(
+                        "/res1_StatedRelationships_Core_INT_20110731_base.txt"), 
+                version);
         Map<String, IOntology<String>> ontMap = imp.getOntologyVersions(
                 new NullProgressMonitor()).get("snomed");
         IOntology<String> ont = ontMap.get(version);
@@ -86,7 +90,11 @@ public class BenchmarkIncremental {
         // a test case for incremental classification using RF1.
 
         System.out.println("Running incremental classification");
-        imp = new RF1Importer(incrementalConcepts, incrementalRelations, 
+        imp = new RF1Importer(
+                this.getClass().getResourceAsStream(
+                        "/sct1_Concepts_Core_INT_20110731_inc.txt"), 
+                this.getClass().getResourceAsStream(
+                        "/res1_StatedRelationships_Core_INT_20110731_inc.txt"), 
                 version);
 
         long start = System.currentTimeMillis();
@@ -114,26 +122,20 @@ public class BenchmarkIncremental {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH_mm_ss");
 
         if ("RF1".equals(type)) {
-            File baseConcepts = new File(RES_DIR + args[1]);
-            File baseRelations = new File(RES_DIR + args[2]);
-            File incConcepts = new File(RES_DIR + args[3]);
-            File incRelations = new File(RES_DIR + args[4]);
-            String version = args[5];
-            int numRuns = Integer.parseInt(args[6]);
+            int numRuns = Integer.parseInt(args[1]);
             String outputFile = OUT_DIR + "inc_benchmark_" + VERSION + "_"
                     + sdf.format(Calendar.getInstance().getTime()) + ".csv";
 
             StringBuilder sb = new StringBuilder();
-            sb.append("Date,Threads,VM Parameters,Concepts File,"
-                    + "Relationships File,Snorocket Version,Axiom "
-                    + "Transformation Time (ms),Axiom Loading Time (ms),"
-                    + "Classification Time(ms),Taxonomy Construction "
-                    + "Time(ms), Total Time(ms), Used Memory(bytes), "
-                    + "Max Memory (bytes)\n");
-
+            sb.append("Date,Threads,VM Parameters,Snomed Version," +
+                    "Snorocket Version,Axiom Transformation Time (ms)," +
+                    "Axiom Loading Time (ms),Classification Time(ms)," +
+                    "Taxonomy Construction Time(ms),Total Time(ms)," +
+                    "Used Memory(bytes),Max Memory (bytes)\n");
+            
+            BenchmarkIncremental bi = new BenchmarkIncremental();
             for (int j = 0; j < numRuns; j++) {
-                Stats stats = BenchmarkIncremental.runBechmarkRF1(baseConcepts,
-                        baseRelations, incConcepts, incRelations, version);
+                Stats stats = bi.runBechmarkRF1();
 
                 sb.append(sdf.format(Calendar.getInstance().getTime()));
                 sb.append(",");
@@ -149,9 +151,7 @@ public class BenchmarkIncremental {
                         sb.append(" ");
                 }
                 sb.append(",");
-                sb.append(baseConcepts);
-                sb.append(",");
-                sb.append(baseRelations);
+                sb.append("SNOMED_20110731");
                 sb.append(",");
                 sb.append(VERSION);
                 sb.append(",");

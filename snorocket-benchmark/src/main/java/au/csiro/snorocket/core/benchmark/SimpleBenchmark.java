@@ -16,10 +16,7 @@ public class SimpleBenchmark {
      * @param args
      */
     public static void main(String[] args) {
-        Benchmark.main(new String[] {"RF1", 
-                "sct1_Concepts_Core_INT_20110731.txt", 
-                "res1_StatedRelationships_Core_INT_20110731.txt", "20110731", 
-                "5"});
+        Benchmark.main(new String[] {"RF1", "5"});
         
         BenchmarkIncremental.main(new String[] {"RF1", 
                 "sct1_Concepts_Core_INT_20110731_base.txt", 
