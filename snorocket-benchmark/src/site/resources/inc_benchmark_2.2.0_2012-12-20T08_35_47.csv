@@ -1,0 +1,3 @@
+Date,Threads,VM Parameters,Snomed Version,Snorocket Version,Axiom Transformation Time (ms),Axiom Loading Time (ms),Classification Time(ms),Taxonomy Construction Time(ms),Total Time(ms),Used Memory(bytes),Max Memory (bytes),Incremental Concepts
+2012-12-20T08_36_33,4,-Xmx4G -Xms4G -Dfile.encoding=UTF-8 ,SNOMED_20110731,2.2.0,2,0,8995,1460,10457,3197573616,4072407040,512
+2012-12-20T08_37_21,4,-Xmx4G -Xms4G -Dfile.encoding=UTF-8 ,SNOMED_20110731,2.2.0,2,0,8827,1388,10217,2728482528,4074569728,512

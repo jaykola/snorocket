@@ -7,6 +7,7 @@ package au.csiro.snorocket.core.benchmark;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.text.SimpleDateFormat;
@@ -35,38 +36,32 @@ public class BenchmarkIncremental {
 
     final static String OUT_DIR = "src/site/resources/";
 
-    public static final String VERSION = "2.1.0";
+    public static final String VERSION = "2.2.0";
 
     /**
      * Runs the incremental benchmark using RF1 files as input. Only the time
      * spent doing the incremental classification is reported (not the time
      * spent doing the base classification).
      * 
-     * @param baseConcepts
-     * @param baseDescriptions
-     * @param baseRelations
-     * @param incrementalConcept
-     * @param incrementalRelations
      * @param version
+     * @param conceptsBase
+     * @param relsBase
+     * @param conceptsInc
+     * @param relsInc
      * @return
      */
-    public Stats runBechmarkRF1() {
+    public Stats runBechmarkRF1(String version, String conceptsBase, String relsBase, String conceptsInc, String relsInc) {
         Stats res = new Stats();
-        
-        String version = "20110731";
-        
+
         // Classify ontology from stated form
         System.out.println("Classifying base ontology");
 
         IFactory<String> factory = new Factory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
-        RF1Importer imp = new RF1Importer(
-                this.getClass().getResourceAsStream(
-                        "/sct1_Concepts_Core_INT_20110731_base.txt"), 
-                this.getClass().getResourceAsStream(
-                        "/res1_StatedRelationships_Core_INT_20110731_base.txt"), 
-                version);
+        InputStream conceptsFile = this.getClass().getResourceAsStream("/"+conceptsBase);
+        InputStream relsFile = this.getClass().getResourceAsStream("/"+relsBase);
+        RF1Importer imp = new RF1Importer(conceptsFile, relsFile, version);
         Map<String, IOntology<String>> ontMap = imp.getOntologyVersions(
                 new NullProgressMonitor()).get("snomed");
         IOntology<String> ont = ontMap.get(version);
@@ -91,10 +86,8 @@ public class BenchmarkIncremental {
 
         System.out.println("Running incremental classification");
         imp = new RF1Importer(
-                this.getClass().getResourceAsStream(
-                        "/sct1_Concepts_Core_INT_20110731_inc.txt"), 
-                this.getClass().getResourceAsStream(
-                        "/res1_StatedRelationships_Core_INT_20110731_inc.txt"), 
+                this.getClass().getResourceAsStream("/"+conceptsInc), 
+                this.getClass().getResourceAsStream("/"+relsInc), 
                 version);
 
         long start = System.currentTimeMillis();
@@ -131,11 +124,16 @@ public class BenchmarkIncremental {
                     "Snorocket Version,Axiom Transformation Time (ms)," +
                     "Axiom Loading Time (ms),Classification Time(ms)," +
                     "Taxonomy Construction Time(ms),Total Time(ms)," +
-                    "Used Memory(bytes),Max Memory (bytes)\n");
-            
+                    "Used Memory(bytes),Max Memory (bytes),Incremental Concepts\n");
+            String version = args[2];
+            String conceptsBase = args[3];
+            String relsBase = args[4];
+            String conceptsInc = args[5];
+            String relsInc = args[6];
+            String numIncremental = args[7];
             BenchmarkIncremental bi = new BenchmarkIncremental();
             for (int j = 0; j < numRuns; j++) {
-                Stats stats = bi.runBechmarkRF1();
+                Stats stats = bi.runBechmarkRF1(version, conceptsBase, relsBase, conceptsInc, relsInc);
 
                 sb.append(sdf.format(Calendar.getInstance().getTime()));
                 sb.append(",");
@@ -169,6 +167,8 @@ public class BenchmarkIncremental {
                         - Runtime.getRuntime().freeMemory());
                 sb.append(",");
                 sb.append(Runtime.getRuntime().maxMemory());
+                sb.append(",");
+                sb.append(numIncremental);
                 sb.append("\n");
 
                 System.gc();
@@ -176,9 +176,11 @@ public class BenchmarkIncremental {
 
             BufferedWriter bw = null;
             try {
-                bw = new BufferedWriter(new FileWriter(
-                        new File(outputFile).getAbsoluteFile()));
+                File ou = new File(outputFile).getAbsoluteFile();
+                System.out.println("Writing to file "+ou);
+                bw = new BufferedWriter(new FileWriter(ou));
                 bw.write(sb.toString());
+                bw.flush();
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {

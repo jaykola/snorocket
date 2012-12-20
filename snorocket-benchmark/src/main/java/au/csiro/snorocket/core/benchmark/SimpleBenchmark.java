@@ -16,16 +16,28 @@ public class SimpleBenchmark {
      * @param args
      */
     public static void main(String[] args) {
-        Benchmark.main(new String[] {"RF1", "5"});
-        
-        BenchmarkIncremental.main(new String[] {"RF1", 
-                "sct1_Concepts_Core_INT_20110731_base.txt", 
-                "res1_StatedRelationships_Core_INT_20110731_base.txt", 
-                "sct1_Concepts_Core_INT_20110731_inc.txt", 
-                "res1_StatedRelationships_Core_INT_20110731_inc.txt", 
-                "20110731", 
-                "5"});
-
+        //Benchmark.main(new String[] {"RF1", "10"});
+        for(int i = 3; i < 12; i++) {
+            int num = exp(2, i);
+            System.out.println("Running incremental classification for "+num+" concepts");
+            BenchmarkIncremental.main(new String[] {"RF1", "2", "20110731", 
+                    "sct1_Concepts_Core_INT_20110731_base_"+num+".txt",
+                    "res1_StatedRelationships_Core_INT_20110731_base_"+num+".txt",
+                    "sct1_Concepts_Core_INT_20110731_inc_"+num+".txt",
+                    "res1_StatedRelationships_Core_INT_20110731_inc_"+num+".txt",
+                    String.valueOf(num)
+                    }
+            );
+            System.out.println("Done.");
+        }
+    }
+    
+    public static int exp(int x, int y) {
+        int res = 1;
+        for(int i = 0; i < y; i++) {
+            res = res * x;
+        }
+        return res;
     }
 
 }
