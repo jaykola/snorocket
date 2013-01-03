@@ -16,8 +16,8 @@ public class SimpleBenchmark {
      * @param args
      */
     public static void main(String[] args) {
-        //Benchmark.main(new String[] {"RF1", "10"});
-        for(int i = 3; i < 12; i++) {
+        Benchmark.main(new String[] {"RF1", "1"});
+        /*for(int i = 3; i < 12; i++) {
             int num = exp(2, i);
             System.out.println("Running incremental classification for "+num+" concepts");
             BenchmarkIncremental.main(new String[] {"RF1", "2", "20110731", 
@@ -29,7 +29,7 @@ public class SimpleBenchmark {
                     }
             );
             System.out.println("Done.");
-        }
+        }*/
     }
     
     public static int exp(int x, int y) {
