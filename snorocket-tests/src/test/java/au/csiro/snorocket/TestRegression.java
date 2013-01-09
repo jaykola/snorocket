@@ -60,7 +60,7 @@ import au.csiro.ontology.IOntology.AxiomForm;
 import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.snorocket.core.ClassNode;
-import au.csiro.snorocket.core.Factory;
+import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
 import au.csiro.snorocket.core.PostProcessedData;
@@ -647,7 +647,7 @@ public class TestRegression {
             InputStream relations, InputStream canonical, String version) {
         // Classify ontology from stated form
         System.out.println("Classifying ontology");
-        IFactory<String> factory = new Factory<>();
+        IFactory<String> factory = new CoreFactory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
         RF1Importer imp = new RF1Importer(concepts, relations, version);
@@ -658,7 +658,7 @@ public class TestRegression {
         no.classify();
         System.out.println("Computing taxonomy");
         PostProcessedData<String> ppd = new PostProcessedData<>(factory);
-        ppd.computeDag(no.getSubsumptions(), null);
+        ppd.computeDag(no.getSubsumptions(), false, null);
         System.out.println("Done");
 
         // Load ontology from canonical table

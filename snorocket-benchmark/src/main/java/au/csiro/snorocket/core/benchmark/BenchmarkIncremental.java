@@ -20,7 +20,7 @@ import au.csiro.ontology.IOntology;
 import au.csiro.ontology.IOntology.AxiomForm;
 import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
-import au.csiro.snorocket.core.Factory;
+import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
 import au.csiro.snorocket.core.PostProcessedData;
@@ -56,7 +56,7 @@ public class BenchmarkIncremental {
         // Classify ontology from stated form
         System.out.println("Classifying base ontology");
 
-        IFactory<String> factory = new Factory<>();
+        IFactory<String> factory = new CoreFactory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
         InputStream conceptsFile = this.getClass().getResourceAsStream("/"+conceptsBase);
@@ -75,7 +75,7 @@ public class BenchmarkIncremental {
         no.classify();
         System.out.println("Computing taxonomy");
         PostProcessedData<String> ppd = new PostProcessedData<>(factory);
-        ppd.computeDag(no.getSubsumptions(), null);
+        ppd.computeDag(no.getSubsumptions(), false, null);
         System.out.println("Done");
 
         // If a relationship that is part of a role group is added incrementally
@@ -103,7 +103,7 @@ public class BenchmarkIncremental {
         start = System.currentTimeMillis();
         System.out.println("Computing taxonomy");
         ppd.computeDagIncremental(no.getNewSubsumptions(),
-                no.getAffectedSubsumptions(), null);
+                no.getAffectedSubsumptions(), false, null);
         res.setTaxonomyBuildingTimeMs(System.currentTimeMillis() - start);
 
         return res;

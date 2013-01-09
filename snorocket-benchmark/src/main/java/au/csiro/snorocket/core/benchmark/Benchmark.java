@@ -19,7 +19,7 @@ import au.csiro.ontology.IOntology;
 import au.csiro.ontology.IOntology.AxiomForm;
 import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
-import au.csiro.snorocket.core.Factory;
+import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
 import au.csiro.snorocket.core.PostProcessedData;
@@ -52,7 +52,7 @@ public class Benchmark {
         // Classify ontology from stated form
         System.out.println("Classifying ontology");
         long start = System.currentTimeMillis();
-        IFactory<String> factory = new Factory<>();
+        IFactory<String> factory = new CoreFactory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
         
@@ -83,7 +83,7 @@ public class Benchmark {
         start = System.currentTimeMillis();
         System.out.println("Computing taxonomy");
         PostProcessedData<String> ppd = new PostProcessedData<>(factory);
-        ppd.computeDag(no.getSubsumptions(), null);
+        ppd.computeDag(no.getSubsumptions(), false, null);
         res.setTaxonomyBuildingTimeMs(System.currentTimeMillis() - start);
         System.out.println("Done");
 
