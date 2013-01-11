@@ -17,10 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 import au.csiro.ontology.IOntology;
-import au.csiro.ontology.IOntology.AxiomForm;
 import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
-import au.csiro.snorocket.core.Factory;
+import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
 import au.csiro.snorocket.core.PostProcessedData;
@@ -56,7 +55,7 @@ public class BenchmarkIncremental {
         // Classify ontology from stated form
         System.out.println("Classifying base ontology");
 
-        IFactory<String> factory = new Factory<>();
+        IFactory<String> factory = new CoreFactory<>();
         NormalisedOntology<String> no = new NormalisedOntology<>(factory);
         System.out.println("Importing axioms");
         InputStream conceptsFile = this.getClass().getResourceAsStream("/"+conceptsBase);
@@ -70,12 +69,12 @@ public class BenchmarkIncremental {
                     " in input files");
         }
         System.out.println("Loading axioms");
-        no.loadAxioms(new HashSet<>(ont.getAxioms(AxiomForm.STATED)));
+        no.loadAxioms(new HashSet<>(ont.getStatedAxioms()));
         System.out.println("Running classification");
         no.classify();
         System.out.println("Computing taxonomy");
         PostProcessedData<String> ppd = new PostProcessedData<>(factory);
-        ppd.computeDag(no.getSubsumptions(), null);
+        ppd.computeDag(no.getSubsumptions(), false, null);
         System.out.println("Done");
 
         // If a relationship that is part of a role group is added incrementally
@@ -98,12 +97,12 @@ public class BenchmarkIncremental {
         res.setAxiomTransformationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Running classification");
-        no.classifyIncremental(new HashSet<>(ont.getAxioms(AxiomForm.STATED)));
+        no.classifyIncremental(new HashSet<>(ont.getStatedAxioms()));
         res.setClassificationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Computing taxonomy");
         ppd.computeDagIncremental(no.getNewSubsumptions(),
-                no.getAffectedSubsumptions(), null);
+                no.getAffectedSubsumptions(), false, null);
         res.setTaxonomyBuildingTimeMs(System.currentTimeMillis() - start);
 
         return res;
