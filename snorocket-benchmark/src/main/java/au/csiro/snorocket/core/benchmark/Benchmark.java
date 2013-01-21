@@ -21,7 +21,6 @@ import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
-import au.csiro.snorocket.core.PostProcessedData;
 
 /**
  * Class used to measure the speed of the Snorocket classifier.
@@ -81,8 +80,7 @@ public class Benchmark {
         res.setClassificationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Computing taxonomy");
-        PostProcessedData<String> ppd = new PostProcessedData<>(factory);
-        ppd.computeDag(no.getSubsumptions(), false, null);
+        no.buildTaxonomy();
         res.setTaxonomyBuildingTimeMs(System.currentTimeMillis() - start);
         System.out.println("Done");
 

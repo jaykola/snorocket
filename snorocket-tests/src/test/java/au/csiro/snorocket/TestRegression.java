@@ -56,14 +56,13 @@ import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
 import au.csiro.ontology.IOntology;
+import au.csiro.ontology.Node;
 import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
-import au.csiro.snorocket.core.ClassNode;
+import au.csiro.ontology.model.Concept;
 import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
-import au.csiro.snorocket.core.PostProcessedData;
-import au.csiro.snorocket.core.util.IntIterator;
 import au.csiro.snorocket.protege.SnorocketOWLReasoner;
 import au.csiro.snorocket.protege.util.DebugUtils;
 
@@ -656,8 +655,7 @@ public class TestRegression {
         System.out.println("Running classification");
         no.classify();
         System.out.println("Computing taxonomy");
-        PostProcessedData<String> ppd = new PostProcessedData<>(factory);
-        ppd.computeDag(no.getSubsumptions(), false, null);
+        no.buildTaxonomy();
         System.out.println("Done");
 
         // Load ontology from canonical table
@@ -751,37 +749,53 @@ public class TestRegression {
             
             // Compare canonical and classified
             List<String> problems = new ArrayList<String>();
-
-            for (IntIterator it = ppd.getConceptIterator(); it.hasNext();) {
-                int id = it.next();
-
-                ClassNode ps = ppd.getEquivalents(id);
+            Map<String, Node<String>> tax = no.getTaxonomy();
+            
+            for (Object key : tax.keySet()) {
+                
+                String concept = null;
+                if(key == au.csiro.ontology.model.Concept.TOP) {
+                    concept = top;
+                } else if(key == au.csiro.ontology.model.Concept.BOTTOM){
+                    concept = bottom;
+                } else {
+                    concept = (String) key; 
+                }
+                
+                Node<String> ps = null;
+                
+                if(key instanceof String) {
+                    ps = no.getEquivalents((String)key);
+                } else if(key == Concept.TOP) {
+                    ps = no.getTopNode();
+                } else if(key == Concept.BOTTOM) {
+                    ps = no.getBottomNode();
+                }
 
                 // Actual equivalents set
                 Set<String> aeqs = new HashSet<>();
 
-                for (IntIterator it2 = ps.getEquivalentConcepts().iterator(); 
-                        it2.hasNext();) {
-                    aeqs.add(getConceptId(it2.next(), factory));
+                for (Object cid : ps.getEquivalentConcepts()) {
+                    if(cid == Concept.TOP)
+                        aeqs.add(top);
+                    else if(cid == Concept.BOTTOM)
+                        aeqs.add(bottom);
+                    else
+                        aeqs.add((String)cid);
                 }
 
                 // Actual parents set
                 Set<String> aps = new HashSet<>();
-                Set<ClassNode> parents = ps.getParents();
-                for (ClassNode parent : parents) {
-                    for (IntIterator it2 = parent.getEquivalentConcepts()
-                            .iterator(); it2.hasNext();) {
-                        aps.add(getConceptId(it2.next(), factory));
+                Set<Node<String>> parents = ps.getParents();
+                for (Node<String> parent : parents) {
+                    for (Object pid : parent.getEquivalentConcepts()) {
+                        if(pid == Concept.TOP)
+                            aps.add(top);
+                        else if(pid == Concept.BOTTOM)
+                            aps.add(bottom);
+                        else
+                            aps.add((String)pid);
                     }
-                }
-                
-                String concept = null;
-                if(id == IFactory.TOP_CONCEPT) {
-                    concept = top;
-                } else if(id == IFactory.BOTTOM_CONCEPT){
-                    concept = bottom;
-                } else {
-                    concept = factory.lookupConceptId(id); 
                 }
                  
                 // FIXME: BOTTOM is not connected and TOP is not assigned as a
@@ -843,24 +857,6 @@ public class TestRegression {
             Assert.assertTrue(false);
         } finally {
             if (br != null) try { br.close(); } catch (Exception e) {}
-        }
-    }
-    
-    /**
-     * Looks up a concept id in a string factory. This method is needed because
-     * top and bottom are not of type T (in this case String).
-     * 
-     * @param id
-     * @param factory
-     * @return
-     */
-    private String getConceptId(int id, IFactory<String> factory) {
-        if(id == 0) {
-            return "_top_";
-        } else if(id == 1) {
-            return "_bottom_";
-        } else {
-            return factory.lookupConceptId(id);
         }
     }
 

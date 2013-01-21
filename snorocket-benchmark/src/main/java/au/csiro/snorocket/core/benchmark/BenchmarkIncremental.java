@@ -22,7 +22,6 @@ import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
-import au.csiro.snorocket.core.PostProcessedData;
 
 /**
  * Class used to measure the speed of the incremental classification
@@ -73,8 +72,7 @@ public class BenchmarkIncremental {
         System.out.println("Running classification");
         no.classify();
         System.out.println("Computing taxonomy");
-        PostProcessedData<String> ppd = new PostProcessedData<>(factory);
-        ppd.computeDag(no.getSubsumptions(), false, null);
+        no.buildTaxonomy();
         System.out.println("Done");
 
         // If a relationship that is part of a role group is added incrementally
@@ -101,8 +99,7 @@ public class BenchmarkIncremental {
         res.setClassificationTimeMs(System.currentTimeMillis() - start);
         start = System.currentTimeMillis();
         System.out.println("Computing taxonomy");
-        ppd.computeDagIncremental(no.getNewSubsumptions(),
-                no.getAffectedSubsumptions(), false, null);
+        no.buildTaxonomy();
         res.setTaxonomyBuildingTimeMs(System.currentTimeMillis() - start);
 
         return res;
