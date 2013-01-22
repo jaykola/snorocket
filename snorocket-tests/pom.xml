@@ -75,6 +75,11 @@
     </dependency>
     <dependency>
     	<groupId>au.csiro</groupId>
+    	<artifactId>snomed-db</artifactId>
+    	<version>1.0</version>
+    </dependency>
+    <dependency>
+    	<groupId>au.csiro</groupId>
     	<artifactId>amt-20120229</artifactId>
     	<version>1.0</version>
     </dependency>
