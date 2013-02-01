@@ -51,6 +51,7 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.PrefixManager;
+import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
@@ -158,7 +159,7 @@ public class TestRegression {
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
 
             System.out.println("Classifying");
-            c.synchronise();
+            c.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 
             // Add additional axioms
             PrefixManager pm = new DefaultPrefixManager(
@@ -302,7 +303,7 @@ public class TestRegression {
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
 
             System.out.println("Classifying");
-            c.synchronise();
+            c.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 
             // Add additional axioms
             PrefixManager pm = new DefaultPrefixManager(
@@ -478,7 +479,7 @@ public class TestRegression {
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, true);
 
             System.out.println("Classifying");
-            c.synchronise();
+            c.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 
             // Add additional axioms
             PrefixManager pm = new DefaultPrefixManager(
@@ -883,7 +884,7 @@ public class TestRegression {
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, false);
 
             System.out.println("Classifying");
-            c.synchronise();
+            c.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 
             // Load ontology from inferred form
             System.out.println("Loading inferred ontology");
@@ -979,7 +980,7 @@ public class TestRegression {
             SnorocketOWLReasoner c = new SnorocketOWLReasoner(ont, null, false);
 
             System.out.println("Classifying");
-            c.synchronise();
+            c.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 
             // Load ontology from inferred form
             System.out.println("Loading inferred ontology");

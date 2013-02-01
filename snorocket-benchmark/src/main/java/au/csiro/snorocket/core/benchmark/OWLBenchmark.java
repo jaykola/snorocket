@@ -15,7 +15,6 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 
 import au.csiro.ontology.util.Statistics;
-import au.csiro.snorocket.protege.SnorocketOWLReasoner;
 import au.csiro.snorocket.protege.SnorocketReasonerFactory;
 
 /**
@@ -51,7 +50,6 @@ public class OWLBenchmark {
         // Create a Snorocket reasoner and classify
         OWLReasonerFactory reasonerFactory = new SnorocketReasonerFactory();
         OWLReasoner reasoner = reasonerFactory.createNonBufferingReasoner(root);
-        ((SnorocketOWLReasoner)reasoner).setNumThreads(4);
         reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
         reasoner.dispose();
         
