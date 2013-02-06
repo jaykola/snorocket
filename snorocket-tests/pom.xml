@@ -23,7 +23,7 @@
   <parent>
     <groupId>au.csiro</groupId>
     <artifactId>snorocket-parent</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.4.3-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -41,7 +41,7 @@
     <dependency>
       <groupId>au.csiro</groupId>
       <artifactId>ontology-model</artifactId>
-      <version>${ontology.version}</version>
+      <version>${ontology-core.version}</version>
     </dependency>
     <dependency>
       <groupId>net.sourceforge.owlapi</groupId>
@@ -66,22 +66,22 @@
     <dependency>
     	<groupId>au.csiro</groupId>
     	<artifactId>snomed-20120131</artifactId>
-    	<version>1.0</version>
+    	<version>${ontology-test-data.version}</version>
     </dependency>
     <dependency>
     	<groupId>au.csiro</groupId>
     	<artifactId>anatomy-2012</artifactId>
-    	<version>1.0</version>
+    	<version>${ontology-test-data.version}</version>
     </dependency>
     <dependency>
     	<groupId>au.csiro</groupId>
     	<artifactId>snomed-db</artifactId>
-    	<version>1.0</version>
+    	<version>${ontology-test-data.version}</version>
     </dependency>
     <dependency>
     	<groupId>au.csiro</groupId>
     	<artifactId>amt-20120229</artifactId>
-    	<version>1.0</version>
+    	<version>${ontology-test-data.version}</version>
     </dependency>
   </dependencies>
 
