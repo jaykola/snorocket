@@ -67,21 +67,25 @@
     	<groupId>au.csiro</groupId>
     	<artifactId>snomed-20120131</artifactId>
     	<version>${ontology-test-data.version}</version>
+        <scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>au.csiro</groupId>
     	<artifactId>anatomy-2012</artifactId>
     	<version>${ontology-test-data.version}</version>
+        <scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>au.csiro</groupId>
     	<artifactId>snomed-db</artifactId>
     	<version>${ontology-test-data.version}</version>
+        <scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>au.csiro</groupId>
     	<artifactId>amt-20120229</artifactId>
     	<version>${ontology-test-data.version}</version>
+        <scope>test</scope>
     </dependency>
   </dependencies>
 
