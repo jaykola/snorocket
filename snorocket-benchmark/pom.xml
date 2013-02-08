@@ -24,6 +24,7 @@
     <groupId>au.csiro</groupId>
     <artifactId>snorocket-parent</artifactId>
     <version>2.0.1-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
   
   <dependencies>
@@ -52,16 +53,6 @@
       <artifactId>snomed-20110731-incremental</artifactId>
       <version>${ontology-test-data.version}</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>au.csiro</groupId>
-      <artifactId>snorocket-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>au.csiro</groupId>
-    	<artifactId>ontology-import</artifactId>
-      <version>${ontology-core.version}</version>
     </dependency>
   </dependencies>
   <build>

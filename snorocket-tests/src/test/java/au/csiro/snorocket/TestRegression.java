@@ -58,9 +58,9 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
 import au.csiro.ontology.IOntology;
 import au.csiro.ontology.Node;
-import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
 import au.csiro.ontology.model.Concept;
+import au.csiro.ontology.util.NullProgressMonitor;
 import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;

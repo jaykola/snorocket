@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 import au.csiro.ontology.IOntology;
-import au.csiro.ontology.classification.NullProgressMonitor;
 import au.csiro.ontology.importer.rf1.RF1Importer;
+import au.csiro.ontology.util.NullProgressMonitor;
 import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
