@@ -64,8 +64,8 @@ import au.csiro.ontology.util.NullProgressMonitor;
 import au.csiro.snorocket.core.CoreFactory;
 import au.csiro.snorocket.core.IFactory;
 import au.csiro.snorocket.core.NormalisedOntology;
-import au.csiro.snorocket.protege.SnorocketOWLReasoner;
-import au.csiro.snorocket.protege.util.DebugUtils;
+import au.csiro.snorocket.owlapi.SnorocketOWLReasoner;
+import au.csiro.snorocket.owlapi.util.DebugUtils;
 
 public class TestRegression {
     final static String TEST_DIR = "src/test/resources/";

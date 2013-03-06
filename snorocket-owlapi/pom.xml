@@ -16,17 +16,17 @@
  -->
 
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>snorocket-tests</artifactId>
+  <artifactId>snorocket-owlapi</artifactId>
   <packaging>jar</packaging>
-  <name>Snorocket Regression Tests</name>
-  
+  <name>${branch}: Snorocket OWL API</name>
+
   <parent>
     <groupId>au.csiro</groupId>
     <artifactId>snorocket-parent</artifactId>
     <version>2.0.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-
+  
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -34,13 +34,13 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>snorocket-owlapi</artifactId>
-      <version>${project.version}</version>
+      <groupId>au.csiro</groupId>
+      <artifactId>ontology-model</artifactId>
+      <version>${ontology-core.version}</version>
     </dependency>
     <dependency>
       <groupId>au.csiro</groupId>
-      <artifactId>ontology-model</artifactId>
+      <artifactId>ontology-import</artifactId>
       <version>${ontology-core.version}</version>
     </dependency>
     <dependency>
@@ -64,43 +64,11 @@
       <version>3.3</version>
     </dependency>
     <dependency>
-    	<groupId>au.csiro</groupId>
-    	<artifactId>snomed-20120131</artifactId>
-    	<version>${ontology-test-data.version}</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>au.csiro</groupId>
-    	<artifactId>anatomy-2012</artifactId>
-    	<version>${ontology-test-data.version}</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>au.csiro</groupId>
-    	<artifactId>snomed-db</artifactId>
-    	<version>${ontology-test-data.version}</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>au.csiro</groupId>
-    	<artifactId>amt-20120229</artifactId>
-    	<version>${ontology-test-data.version}</version>
-        <scope>test</scope>
-    </dependency>
+	  <groupId>log4j</groupId>
+	  <artifactId>log4j</artifactId>
+	  <version>1.2.16</version>
+	</dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-	  <argLine> 
-	    -server -Xmx3G
-	  </argLine>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
 </project>
+

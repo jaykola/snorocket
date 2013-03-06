@@ -15,7 +15,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 
 import au.csiro.ontology.util.Statistics;
-import au.csiro.snorocket.protege.SnorocketReasonerFactory;
+import au.csiro.snorocket.owlapi.SnorocketReasonerFactory;
 
 /**
  * @author Alejandro Metke

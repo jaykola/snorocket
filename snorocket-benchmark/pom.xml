@@ -35,7 +35,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>snorocket-protege</artifactId>
+      <artifactId>snorocket-owlapi</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
